@@ -1,7 +1,7 @@
 <template>
   <header class="topbar card">
     <div class="left">
-      <div class="title">System Administrator</div>
+      <div class="title">Medical Equipment Lifecycle Management System</div>
     </div>
     <div class="right">
       <div class="user">{{ username || 'Guest' }}</div>

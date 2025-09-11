@@ -1,19 +1,31 @@
 <template>
   <aside class="sidebar">
-    <div class="logo">MELMS</div>
+    <div class="logo">{{ resolvedTitle }}</div>
     <nav class="menu">
-      <RouterLink class="item" to="/admin/dashboard">Dashboard</RouterLink>
-      <RouterLink class="item" to="/admin/users">Users & Access</RouterLink>
-      <RouterLink class="item" to="/admin/roles">Roles & Permissions</RouterLink>
-      <RouterLink class="item" to="/admin/orgs">Organization & Departments</RouterLink>
-      <RouterLink class="item" to="/admin/settings">System Settings</RouterLink>
-      <RouterLink class="item" to="/admin/logs">Logs & Audit</RouterLink>
-      <RouterLink class="item" to="/admin/notices">Announcements & Help</RouterLink>
+      <RouterLink v-for="(i, idx) in items" :key="idx" class="item" :to="i.to">{{ i.label }}</RouterLink>
     </nav>
   </aside>
-</template>
+ </template>
 
 <script setup>
+import { useRoute } from 'vue-router'
+import { computed } from 'vue'
+
+const props = defineProps({
+  title: { type: String, default: '' },
+  items: { type: Array, default: () => [] },
+})
+
+const route = useRoute()
+const resolvedTitle = computed(() => {
+  if (props.title) return props.title
+  const p = route.path || ''
+  if (p.startsWith('/admin')) return 'System Administrator'
+  if (p.startsWith('/equipment')) return 'Equipment Manager'
+  if (p.startsWith('/department')) return 'Department User'
+  if (p.startsWith('/procurement')) return 'Procurement Staff'
+  return ''
+})
 </script>
 
 <style scoped>

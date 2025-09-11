@@ -1,6 +1,6 @@
 <template>
   <div class="admin-page">
-    <Sidebar />
+    <Sidebar :items="menuItems" />
     <main class="content">
       <Topbar />
       <div class="content-body">
@@ -13,6 +13,16 @@
 <script setup>
 import Sidebar from '@/components/layout/Sidebar.vue'
 import Topbar from '@/components/layout/Topbar.vue'
+
+const menuItems = [
+  { label: 'Dashboard', to: '/admin/dashboard' },
+  { label: 'Users & Access', to: '/admin/users' },
+  { label: 'Roles & Permissions', to: '/admin/roles' },
+  { label: 'Organization & Departments', to: '/admin/orgs' },
+  { label: 'System Settings', to: '/admin/settings' },
+  { label: 'Logs & Audit', to: '/admin/logs' },
+  { label: 'Announcements & Help', to: '/admin/notices' },
+]
 </script>
 
 <style scoped>

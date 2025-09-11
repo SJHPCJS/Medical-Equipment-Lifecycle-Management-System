@@ -1,0 +1,12 @@
+<template>
+  <div class="card" style="padding:16px;">
+    <div class="title-lg">Equipment Requests</div>
+    <!-- TODO: API Submit tickets for equipment needs -->
+    <p class="subtitle" style="margin-top:8px;">Placeholder page.</p>
+  </div>
+</template>
+
+<script setup>
+</script>
+
+

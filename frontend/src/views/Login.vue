@@ -3,8 +3,9 @@
     <div class="overlay">
       <div class="brand">Medical Equipment Lifecycle Management System</div>
       <div class="login-card card">
-        <div class="title-lg">Sign in to Admin</div>
-        <div class="subtitle">Demo account: any username + password 123456</div>
+        <div class="title-lg">Sign in</div>
+        <div class="subtitle">Demo accounts (password for all: 123456):
+          admin | equipment | department | procurement</div>
         <form class="form" @submit.prevent="onSubmit">
           <label>Username</label>
           <input class="input" v-model="username" placeholder="Enter username" />
@@ -40,7 +41,11 @@ function onSubmit() {
   }
   localStorage.setItem('demo_logged_in', '1')
   localStorage.setItem('demo_username', username.value || 'Admin')
-  router.push('/admin')
+  const name = (username.value || '').toLowerCase()
+  if (name === 'equipment') return router.push('/equipment')
+  if (name === 'department') return router.push('/department')
+  if (name === 'procurement') return router.push('/procurement')
+  return router.push('/admin')
 }
 </script>
 
