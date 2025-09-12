@@ -17,7 +17,6 @@ import Topbar from '@/components/layout/Topbar.vue'
 const menuItems = [
   { label: 'Dashboard', to: '/department/dashboard' },
   { label: 'My Devices', to: '/department/my-devices' },
-  { label: 'Usage Logs', to: '/department/usage' },
   { label: 'Repair Request', to: '/department/repair' },
   { label: 'Equipment Requests', to: '/department/requests' },
 ]

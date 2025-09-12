@@ -18,9 +18,6 @@ const menuItems = [
   { label: 'Dashboard', to: '/equipment/dashboard' },
   { label: 'Equipment Ledger', to: '/equipment/ledger' },
   { label: 'Onboarding & Profiling', to: '/equipment/onboarding' },
-  { label: 'Status & Transfer', to: '/equipment/status-transfer' },
-  { label: 'Demands', to: '/equipment/demands' },
-  { label: 'Maintenance', to: '/equipment/maintenance' },
   { label: 'Repairs', to: '/equipment/repairs' },
   { label: 'Scrap Management', to: '/equipment/scrap' },
 ]

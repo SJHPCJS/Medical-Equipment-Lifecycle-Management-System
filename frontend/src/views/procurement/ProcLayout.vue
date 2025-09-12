@@ -16,12 +16,9 @@ import Topbar from '@/components/layout/Topbar.vue'
 
 const menuItems = [
   { label: 'Dashboard', to: '/procurement/dashboard' },
-  { label: 'Plans & Requisitions', to: '/procurement/plans' },
+  { label: 'Purchase Requests', to: '/procurement/plans' },
   { label: 'Vendors', to: '/procurement/vendors' },
-  { label: 'Bids / RFQ', to: '/procurement/bids' },
   { label: 'Purchase Orders', to: '/procurement/orders' },
-  { label: 'Receiving & QA', to: '/procurement/receiving' },
-  { label: 'Contracts & Budget', to: '/procurement/contracts' },
 ]
 </script>
 

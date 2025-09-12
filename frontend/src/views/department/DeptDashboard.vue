@@ -1,16 +1,22 @@
 <template>
   <div>
     <div class="grid">
-      <StatCard label="Devices In Department" value="--" />
-      <StatCard label="Bookable Devices" value="--" />
-      <StatCard label="Pending Usage Logs" value="--" />
-      <StatCard label="Pending Repair Confirmations" value="--" />
+      <StatCard label="In-Use Devices" :value="inUse" />
+      <StatCard label="Devices Under Repair" :value="underRepair" />
+      <StatCard label="My Todos: Usage Logs" :value="todosUsage" />
+      <StatCard label="My Todos: Repair Confirmations" :value="todosRepair" />
     </div>
   </div>
 </template>
 
 <script setup>
 import StatCard from '@/components/layout/StatCard.vue'
+import { deptDevices, usageTodos, repairConfirmTodos } from '@/mocks/department.js'
+
+const inUse = deptDevices.filter(d => d.status === 'In Use').length
+const underRepair = deptDevices.filter(d => d.status === 'Under Repair').length
+const todosUsage = usageTodos.length
+const todosRepair = repairConfirmTodos.length
 </script>
 
 <style scoped>
