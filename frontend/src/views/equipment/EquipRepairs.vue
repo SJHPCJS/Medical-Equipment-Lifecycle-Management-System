@@ -3,8 +3,22 @@
     <div class="title-lg">Repair Management</div>
     <div class="subtitle" style="margin-top:8px;">Ticket pool from department users.</div>
 
+    <div class="filters" style="margin-top:16px; display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
+      <div>
+        <label>Status</label>
+        <MultiSelect v-model="filters.statuses" :options="statuses.map(s => ({ value: s, label: s }))" placeholder="All status" />
+      </div>
+      <div>
+        <label>Department</label>
+        <MultiSelect v-model="filters.departments" :options="departmentList.map(d => ({ value: d, label: d }))" placeholder="All departments" />
+      </div>
+      <div style="display:flex; gap:8px; align-items:end;">
+        <button class="btn" @click="resetFilters">Reset</button>
+      </div>
+    </div>
+
     <div class="table-wrapper" style="margin-top:16px; overflow:auto;">
-      <table class="table">
+      <table class="table" style="table-layout:fixed; width:100%;">
         <thead>
           <tr>
             <th>ID</th>
@@ -19,7 +33,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="t in tickets" :key="t.id">
+          <tr v-for="t in filtered" :key="t.id">
             <td>{{ t.id }}</td>
             <td>{{ formatTime(t.createdAt) }}</td>
             <td>{{ t.finishedAt ? formatTime(t.finishedAt) : '-' }}</td>
@@ -32,7 +46,7 @@
               </select>
             </td>
             <td>{{ t.department }}</td>
-            <td>
+            <td style="white-space:nowrap;">
               <button class="btn" @click="save(t)">Save</button>
               <button class="btn" style="margin-left:8px;" @click="complete(t)" :disabled="t.status==='Completed'">Complete</button>
             </td>
@@ -47,12 +61,24 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue'
+import { reactive, computed } from 'vue'
+import MultiSelect from '@/components/MultiSelect.vue'
 import { clone, repairTickets as seed } from '@/mocks/equipment.js'
 
 const state = reactive({ tickets: clone(seed) })
 const tickets = state.tickets
 const statuses = ['Pending Review','In Repair','In Acceptance','Completed','Rejected']
+
+const departmentList = computed(() => Array.from(new Set(tickets.map(t => t.department))))
+
+const filters = reactive({ statuses: [], departments: [] })
+const filtered = computed(() => tickets.filter(t => {
+  const matchStatus = filters.statuses.length===0 || filters.statuses.includes(t.status)
+  const matchDept = filters.departments.length===0 || filters.departments.includes(t.department)
+  return matchStatus && matchDept
+}))
+
+function resetFilters() { filters.statuses = []; filters.departments = [] }
 
 function formatTime(ts) { try { return new Date(ts).toLocaleString() } catch { return ts } }
 
@@ -65,6 +91,6 @@ function complete(t) {
 
 <style scoped>
 .table { width: 100%; border-collapse: collapse; }
-.table th, .table td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; text-align: left; white-space: nowrap; }
+.table th, .table td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; text-align: left; white-space: normal; word-break: break-word; }
 .table th { background: #f9fafb; font-weight: 700; }
 </style>

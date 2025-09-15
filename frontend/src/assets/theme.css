@@ -48,6 +48,11 @@ body {
   background: var(--color-primary-600);
 }
 
+/* Semantic hover colors for actions */
+.btn-blue:hover { background: #2563eb; color: #fff; }
+.btn-red:hover { background: #dc2626; color: #fff; }
+.btn-green:hover { background: #16a34a; color: #fff; }
+
 /* Inputs */
 .input {
   width: 100%;

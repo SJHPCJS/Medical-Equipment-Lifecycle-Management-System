@@ -12,7 +12,7 @@
     </div>
 
     <div class="table-wrapper" style="margin-top:16px; overflow:auto;">
-      <table class="table">
+      <table class="table" style="table-layout:fixed; width:100%;">
         <thead>
           <tr>
             <th>Dept ID</th>
@@ -24,9 +24,9 @@
           <tr v-for="d in filtered" :key="d.id">
             <td>{{ d.id }}</td>
             <td>{{ d.name }}</td>
-            <td>
-              <button class="btn" @click="openEdit(d)">Edit</button>
-              <button class="btn" style="margin-left:8px;" @click="remove(d)">Delete</button>
+            <td style="white-space:nowrap;">
+              <button class="btn btn-blue" @click="openEdit(d)">Edit</button>
+              <button class="btn btn-red" style="margin-left:8px;" @click="remove(d)">Delete</button>
             </td>
           </tr>
           <tr v-if="filtered.length===0">

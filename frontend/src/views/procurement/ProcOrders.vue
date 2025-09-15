@@ -4,7 +4,7 @@
     <div class="subtitle" style="margin-top:8px;">Update order status and push to equipment team for onboarding.</div>
 
     <div class="table-wrapper" style="margin-top:16px; overflow:auto;">
-      <table class="table">
+      <table class="table" style="table-layout:fixed; width:100%;">
         <thead>
           <tr>
             <th>PO ID</th>
@@ -14,7 +14,7 @@
             <th>Vendor</th>
             <th>Total Price</th>
             <th>Status</th>
-            <th style="width:260px;">Actions</th>
+            <th style="width:180px;">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -26,11 +26,8 @@
             <td>{{ vendorName(o.vendorId) }}</td>
             <td>{{ formatPrice(o.price) }}</td>
             <td>{{ o.status }}</td>
-            <td>
-              <button class="btn" @click="setStatus(o,'Confirmed Arrival')">Confirm Arrival</button>
-              <button class="btn" style="margin-left:8px;" @click="setStatus(o,'Not Onboarded')">Not Onboarded</button>
-              <button class="btn" style="margin-left:8px;" @click="setStatus(o,'Onboarded')">Onboarded</button>
-              <button class="btn" style="margin-left:8px;" @click="pushToEquip(o)">Push to Equipment</button>
+            <td style="white-space:nowrap;">
+              <button class="btn btn-green" @click="confirmArrival(o)">Confirm Arrival</button>
             </td>
           </tr>
           <tr v-if="state.orders.length===0">
@@ -51,7 +48,10 @@ const state = reactive({ orders: clone(seed) })
 function vendorName(id) { return vendors.find(v => v.id === id)?.name || '-' }
 function formatPrice(n) { return `$${n.toLocaleString()}` }
 function setStatus(o, s) { o.status = s }
-function pushToEquip(o) { alert(`Pushed ${o.id} to Equipment Manager (demo only)`) }
+function confirmArrival(o) {
+  setStatus(o, 'Confirmed Arrival')
+  alert(`Pushed ${o.id} to Equipment Manager (demo only)`)
+}
 </script>
 
 <style scoped>

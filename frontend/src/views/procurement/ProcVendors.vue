@@ -4,7 +4,7 @@
     <div class="subtitle" style="margin-top:8px;">Manage vendor catalog by item (SKU as index).</div>
 
     <div class="table-wrapper" style="margin-top:16px; overflow:auto;">
-      <table class="table">
+      <table class="table" style="table-layout:fixed; width:100%;">
         <thead>
           <tr>
             <th>Vendor</th>
@@ -102,7 +102,7 @@ function saveNew() {
 
 <style scoped>
 .table { width: 100%; border-collapse: collapse; }
-.table th, .table td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; text-align: left; white-space: nowrap; }
+.table th, .table td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; text-align: left; white-space: normal; word-break: break-word; }
 .table th { background: #f9fafb; font-weight: 700; }
 .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display:flex; align-items:center; justify-content:center; padding:16px; }
 .modal { width: min(720px, 100%); padding: 16px; }

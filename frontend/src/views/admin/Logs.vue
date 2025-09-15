@@ -4,10 +4,19 @@
     <div class="subtitle" style="margin-top:8px;">Track system-level operations. Frontend-only mock.</div>
 
     <!-- Filters -->
-    <div class="filters" style="margin-top:16px; display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
-      <input class="input" v-model="filters.keyword" placeholder="Search user/target/action" />
-      <input class="input" v-model="filters.start" type="datetime-local" />
-      <input class="input" v-model="filters.end" type="datetime-local" />
+    <div class="filters" style="margin-top:16px; display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; align-items:end;">
+      <div>
+        <label>Keyword</label>
+        <input class="input" v-model="filters.keyword" placeholder="Search user/target/action" />
+      </div>
+      <div>
+        <label>Start Date</label>
+        <input class="input" v-model="filters.start" type="date" lang="en-US" />
+      </div>
+      <div>
+        <label>End Date</label>
+        <input class="input" v-model="filters.end" type="date" lang="en-US" />
+      </div>
       <div style="display:flex; gap:8px;">
         <button class="btn" @click="resetFilters">Reset</button>
         <button class="btn btn-primary" @click="exportCsv">Export CSV</button>
@@ -16,7 +25,7 @@
 
     <!-- Table -->
     <div class="table-wrapper" style="margin-top:16px; overflow:auto;">
-      <table class="table">
+      <table class="table" style="table-layout:fixed; width:100%;">
         <thead>
           <tr>
             <th>Time</th>
@@ -65,16 +74,12 @@ const filters = reactive({ keyword: '', start: '', end: '' })
 const page = ref(1)
 const pageSize = ref(10)
 
-function formatTime(ts) {
-  try {
-    return new Date(ts).toLocaleString()
-  } catch { return ts }
-}
+function formatTime(ts) { try { return new Date(ts).toLocaleString('en-US') } catch { return ts } }
 
 const filtered = computed(() => {
   const kw = (filters.keyword || '').toLowerCase()
-  const startMs = filters.start ? new Date(filters.start).getTime() : -Infinity
-  const endMs = filters.end ? new Date(filters.end).getTime() : Infinity
+  const startMs = filters.start ? new Date(`${filters.start}T00:00:00`).getTime() : -Infinity
+  const endMs = filters.end ? new Date(`${filters.end}T23:59:59.999`).getTime() : Infinity
   return state.logs.filter(l => {
     const t = new Date(l.timestamp).getTime()
     const matchTime = t >= startMs && t <= endMs
@@ -111,7 +116,7 @@ function exportCsv() {
 
 <style scoped>
 .table { width: 100%; border-collapse: collapse; }
-.table th, .table td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; text-align: left; white-space: nowrap; }
+.table th, .table td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; text-align: left; white-space: normal; word-break: break-word; }
 .table th { background: #f9fafb; font-weight: 700; }
 </style>
 

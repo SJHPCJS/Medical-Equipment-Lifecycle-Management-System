@@ -20,7 +20,7 @@
 
     <!-- Table -->
     <div class="table-wrapper" style="margin-top:16px; overflow:auto;">
-      <table class="table">
+      <table class="table" style="table-layout:fixed; width:100%;">
         <thead>
           <tr>
             <th>ID</th>
@@ -36,9 +36,9 @@
             <td>{{ r.kind }}</td>
             <td>{{ r.content }}</td>
             <td>{{ r.status }}</td>
-            <td>
-              <button class="btn" @click="cancel(r)" v-if="r.status==='Pending'">Cancel</button>
-              <button class="btn" v-else @click="view(r)">View</button>
+            <td style="white-space:nowrap;">
+              <button class="btn btn-red" @click="cancel(r)" v-if="r.status==='Pending'">Cancel</button>
+              <button class="btn btn-green" v-else @click="view(r)">View</button>
             </td>
           </tr>
           <tr v-if="filtered.length===0">
@@ -109,7 +109,7 @@ function view(r) { alert(`View ${r.id} (demo only)`) }
 
 <style scoped>
 .table { width: 100%; border-collapse: collapse; }
-.table th, .table td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; text-align: left; white-space: nowrap; }
+.table th, .table td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; text-align: left; white-space: normal; word-break: break-word; }
 .table th { background: #f9fafb; font-weight: 700; }
 .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display:flex; align-items:center; justify-content:center; padding:16px; }
 .modal { width: min(720px, 100%); padding: 16px; }

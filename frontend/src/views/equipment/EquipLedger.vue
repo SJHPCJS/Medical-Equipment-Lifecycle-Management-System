@@ -3,25 +3,32 @@
     <div class="title-lg">Equipment Ledger</div>
     <div class="subtitle" style="margin-top:8px;">Manage equipment inventory using frontend-only mock data.</div>
 
-    <div class="filters" style="margin-top:16px; display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
+    <div class="filters" style="margin-top:16px; display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px;">
       <input class="input" v-model="filters.keyword" placeholder="Search by id/type/vendor" />
-      <select class="input" v-model="filters.status">
-        <option value="">All status</option>
-        <option v-for="s in statuses" :key="s" :value="s">{{ s }}</option>
-      </select>
-      <select class="input" v-model="filters.departmentId">
-        <option value="">All departments</option>
-        <option v-for="d in departments" :key="d.id" :value="d.id">{{ d.name }}</option>
-      </select>
-      <input class="input" v-model="filters.vendor" placeholder="Vendor" />
-      <div style="display:flex; gap:8px;">
+      <div>
+        <label>Type</label>
+        <MultiSelect v-model="filters.types" :options="types.map(t => ({ value: t, label: t }))" placeholder="All types" />
+      </div>
+      <div>
+        <label>Status</label>
+        <MultiSelect v-model="filters.statuses" :options="statuses.map(s => ({ value: s, label: s }))" placeholder="All status" />
+      </div>
+      <div>
+        <label>Department</label>
+        <MultiSelect v-model="filters.departmentIds" :options="departments.map(d => ({ value: d.id, label: d.name }))" placeholder="All departments" />
+      </div>
+      <div>
+        <label>Vendor</label>
+        <MultiSelect v-model="filters.vendors" :options="vendorsList.map(v => ({ value: v, label: v }))" placeholder="All vendors" />
+      </div>
+      <div style="display:flex; gap:8px; align-items:end;">
         <button class="btn" @click="resetFilters">Reset</button>
         <button class="btn btn-primary" @click="exportCsv">Export CSV</button>
       </div>
     </div>
 
     <div class="table-wrapper" style="margin-top:16px; overflow:auto;">
-      <table class="table">
+      <table class="table" style="table-layout:fixed; width:100%;">
         <thead>
           <tr>
             <th>Device ID</th>
@@ -47,11 +54,11 @@
             </td>
             <td>{{ departmentName(d.departmentId) }}</td>
             <td>{{ d.vendor }}</td>
-            <td>
+            <td style="white-space:nowrap;">
               <button class="btn" @click.stop="upload('Manual', d)">Upload Manual</button>
               <button class="btn" style="margin-left:8px;" @click.stop="upload('Warranty', d)">Upload Warranty</button>
-              <button class="btn" style="margin-left:8px;" @click.stop="edit(d)">Edit</button>
-              <button class="btn" style="margin-left:8px;" @click.stop="remove(d)">Delete</button>
+              <button class="btn btn-blue" style="margin-left:8px;" @click.stop="edit(d)">Edit</button>
+              <button class="btn btn-red" style="margin-left:8px;" @click.stop="remove(d)">Delete</button>
             </td>
           </tr>
           <tr v-if="filtered.length===0">
@@ -81,25 +88,30 @@
 
 <script setup>
 import { reactive, ref, computed } from 'vue'
+import MultiSelect from '@/components/MultiSelect.vue'
 import { devices as seedDevices, deviceStatuses as statuses, clone } from '@/mocks/equipment.js'
 import { departments } from '@/mocks/admin.js'
 
 const state = reactive({ devices: clone(seedDevices) })
 
-const filters = reactive({ keyword: '', status: '', departmentId: '', vendor: '' })
+const types = computed(() => Array.from(new Set(state.devices.map(d => d.type))))
+const vendorsList = computed(() => Array.from(new Set(state.devices.map(d => d.vendor))))
+
+const filters = reactive({ keyword: '', types: [], statuses: [], departmentIds: [], vendors: [] })
 
 const filtered = computed(() => {
   const kw = filters.keyword.toLowerCase()
   return state.devices.filter(d => {
     const matchKw = !kw || `${d.id} ${d.type} ${d.vendor}`.toLowerCase().includes(kw)
-    const matchStatus = !filters.status || d.status === filters.status
-    const matchDept = !filters.departmentId || d.departmentId === filters.departmentId
-    const matchVendor = !filters.vendor || d.vendor.toLowerCase().includes(filters.vendor.toLowerCase())
-    return matchKw && matchStatus && matchDept && matchVendor
+    const matchType = filters.types.length===0 || filters.types.includes(d.type)
+    const matchStatus = filters.statuses.length===0 || filters.statuses.includes(d.status)
+    const matchDept = filters.departmentIds.length===0 || filters.departmentIds.includes(d.departmentId)
+    const matchVendor = filters.vendors.length===0 || filters.vendors.includes(d.vendor)
+    return matchKw && matchType && matchStatus && matchDept && matchVendor
   })
 })
 
-function resetFilters() { filters.keyword=''; filters.status=''; filters.departmentId=''; filters.vendor='' }
+function resetFilters() { filters.keyword=''; filters.types=[]; filters.statuses=[]; filters.departmentIds=[]; filters.vendors=[] }
 
 function departmentName(id) { const dep = departments.find(d => d.id === id); return dep ? dep.name : '-' }
 
@@ -126,7 +138,7 @@ function remove(d) { if (!confirm(`Delete device ${d.id}?`)) return; state.devic
 
 <style scoped>
 .table { width: 100%; border-collapse: collapse; }
-.table th, .table td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; text-align: left; white-space: nowrap; }
+.table th, .table td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; text-align: left; white-space: normal; word-break: break-word; }
 .table th { background: #f9fafb; font-weight: 700; }
 
 .drawer-backdrop { position: fixed; inset:0; background: rgba(0,0,0,0.35); display:flex; }

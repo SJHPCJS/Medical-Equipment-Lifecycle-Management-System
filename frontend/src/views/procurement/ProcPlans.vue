@@ -4,7 +4,7 @@
     <div class="subtitle" style="margin-top:8px;">Review requests and assign vendors to create purchase orders.</div>
 
     <div class="table-wrapper" style="margin-top:16px; overflow:auto;">
-      <table class="table">
+      <table class="table" style="table-layout:fixed; width:100%;">
         <thead>
           <tr>
             <th>ID</th>
@@ -24,10 +24,10 @@
             <td>{{ p.qty }}</td>
             <td>{{ p.department }}</td>
             <td>{{ p.status }}</td>
-            <td>
-              <button class="btn" @click="reject(p)" v-if="p.status==='Pending'">Reject</button>
-              <button class="btn" style="margin-left:8px;" @click="openAssign(p)" v-if="p.status==='Pending'">Create PO</button>
-              <button class="btn" v-else @click="view(p)">View</button>
+            <td style="white-space:nowrap;">
+              <button class="btn btn-red" @click="reject(p)" v-if="p.status==='Pending'">Reject</button>
+              <button class="btn btn-green" style="margin-left:8px;" @click="openAssign(p)" v-if="p.status==='Pending'">Create PO</button>
+              <button class="btn btn-blue" v-else @click="view(p)">View</button>
             </td>
           </tr>
           <tr v-if="state.plans.length===0">
@@ -94,7 +94,7 @@ function openAssign(p) {
 function closeAssign() { modal.open = false }
 function createPO() {
   const id = `PO-${String(Math.floor(Math.random()*100000)).padStart(4,'0')}`
-  state.orders.push({ id, sku: modal.form.sku, itemName: vendorItems.value.find(i => i.sku === modal.form.sku)?.name || '', qty: modal.form.qty, vendorId: modal.form.vendorId, price: totalPrice.value, status: 'Confirmed Arrival' })
+  state.orders.push({ id, sku: modal.form.sku, itemName: vendorItems.value.find(i => i.sku === modal.form.sku)?.name || '', qty: modal.form.qty, vendorId: modal.form.vendorId, price: totalPrice.value, status: 'Paid' })
   modal.plan.status = 'Assigned'
   closeAssign()
 }

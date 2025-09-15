@@ -30,6 +30,7 @@ const props = defineProps({
   minuteStep: { type: Number, default: 1 },
   startYear: { type: Number, default: 2020 },
   endYear: { type: Number, default: 2030 },
+  hideMinutes: { type: Boolean, default: false },
 })
 const emit = defineEmits(['update:modelValue'])
 
@@ -70,7 +71,7 @@ function fromIso(v) {
     m.value = dt.getUTCMonth() + 1
     d.value = dt.getUTCDate()
     hh.value = dt.getUTCHours()
-    mi.value = dt.getUTCMinutes()
+    mi.value = props.hideMinutes ? 0 : dt.getUTCMinutes()
   } catch {}
 }
 
@@ -83,5 +84,6 @@ watch(() => props.modelValue, (v) => fromIso(v), { immediate: true })
 .row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .row + .row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 </style>
+
 
 

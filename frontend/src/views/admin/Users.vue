@@ -6,14 +6,14 @@
     <!-- Filters -->
     <div class="filters" style="margin-top:16px; display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
       <input class="input" v-model="filters.username" placeholder="Search by username" />
-      <select class="input" v-model="filters.roleId">
-        <option value="">All roles</option>
-        <option v-for="r in roles" :value="r.id" :key="r.id">{{ r.name }}</option>
-      </select>
-      <select class="input" v-model="filters.departmentId">
-        <option value="">All departments</option>
-        <option v-for="d in departments" :value="d.id" :key="d.id">{{ d.name }}</option>
-      </select>
+      <div>
+        <label>User Role</label>
+        <MultiSelect v-model="filters.roleIds" :options="roles.map(r => ({ value: r.id, label: r.name }))" placeholder="All roles" />
+      </div>
+      <div>
+        <label>Department</label>
+        <MultiSelect v-model="filters.departmentIds" :options="departments.map(d => ({ value: d.id, label: d.name }))" placeholder="All departments" />
+      </div>
       <div style="display:flex; gap:8px;">
         <button class="btn" @click="resetFilters">Reset</button>
         <button class="btn btn-primary" @click="openCreate">Add User</button>
@@ -38,9 +38,9 @@
             <td>{{ u.username }}</td>
             <td>{{ roleName(u.roleId) }}</td>
             <td>{{ departmentName(u.departmentId) }}</td>
-            <td>
-              <button class="btn" @click="openEdit(u)">Edit</button>
-              <button class="btn" style="margin-left:8px;" @click="remove(u)">Delete</button>
+            <td style="white-space:nowrap;">
+              <button class="btn btn-blue" @click="openEdit(u)">Edit</button>
+              <button class="btn btn-red" style="margin-left:8px;" @click="remove(u)">Delete</button>
             </td>
           </tr>
           <tr v-if="pagedUsers.length === 0">
@@ -91,7 +91,10 @@
           </div>
           <div v-if="modal.mode==='create' || modal.mode==='edit'">
             <label>Password</label>
-            <input class="input" v-model="modal.form.password" type="password" placeholder="Enter password" />
+            <div style="display:flex; gap:8px; align-items:center;">
+              <input class="input" v-model="modal.form.password" :type="showPassword ? 'text' : 'password'" placeholder="Enter password" />
+              <button class="btn btn-blue" style="width:auto;" @click="showPassword=!showPassword">{{ showPassword ? 'Hide' : 'Show' }}</button>
+            </div>
           </div>
         </div>
         <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:16px;">
@@ -106,21 +109,22 @@
 
 <script setup>
 import { reactive, ref, computed, watch } from 'vue'
+import MultiSelect from '@/components/MultiSelect.vue'
 import { clone, users as seedUsers, roles, departments, getNextUserId } from '@/mocks/admin.js'
 
 const state = reactive({
   users: clone(seedUsers),
 })
 
-const filters = reactive({ username: '', roleId: '', departmentId: '' })
+const filters = reactive({ username: '', roleIds: [], departmentIds: [] })
 const page = ref(1)
 const pageSize = ref(10)
 
 const filteredUsers = computed(() => {
   return state.users.filter(u => {
     const matchName = !filters.username || u.username.toLowerCase().includes(filters.username.toLowerCase())
-    const matchRole = !filters.roleId || u.roleId === filters.roleId
-    const matchDept = !filters.departmentId || u.departmentId === filters.departmentId
+    const matchRole = filters.roleIds.length===0 || filters.roleIds.includes(u.roleId)
+    const matchDept = filters.departmentIds.length===0 || filters.departmentIds.includes(u.departmentId)
     return matchName && matchRole && matchDept
   })
 })
@@ -138,8 +142,8 @@ const pagedUsers = computed(() => {
 
 function resetFilters() {
   filters.username = ''
-  filters.roleId = ''
-  filters.departmentId = ''
+  filters.roleIds = []
+  filters.departmentIds = []
 }
 
 function roleName(roleId) {
@@ -157,17 +161,20 @@ const modal = reactive({
   mode: 'create', // 'create' | 'edit'
   form: { id: '', username: '', roleId: roles[0]?.id || '', departmentId: departments[0]?.id || '', password: '' },
 })
+const showPassword = ref(false)
 
 function openCreate() {
   modal.open = true
   modal.mode = 'create'
   modal.form = { id: getNextUserId(state.users), username: '', roleId: roles[0]?.id || '', departmentId: departments[0]?.id || '', password: '' }
+  showPassword.value = false
 }
 
 function openEdit(user) {
   modal.open = true
   modal.mode = 'edit'
-  modal.form = { id: user.id, username: user.username, roleId: user.roleId, departmentId: user.departmentId, password: '' }
+  modal.form = { id: user.id, username: user.username, roleId: user.roleId, departmentId: user.departmentId, password: user.password || '' }
+  showPassword.value = false
 }
 
 function closeModal() {
@@ -177,11 +184,11 @@ function closeModal() {
 function save() {
   const payload = clone(modal.form)
   if (modal.mode === 'create') {
-    state.users.push({ id: payload.id, username: payload.username, roleId: payload.roleId, departmentId: payload.departmentId })
+    state.users.push({ id: payload.id, username: payload.username, roleId: payload.roleId, departmentId: payload.departmentId, password: payload.password })
   } else {
     const idx = state.users.findIndex(u => u.id === payload.id)
     if (idx !== -1) {
-      state.users[idx] = { id: payload.id, username: payload.username, roleId: payload.roleId, departmentId: payload.departmentId }
+      state.users[idx] = { id: payload.id, username: payload.username, roleId: payload.roleId, departmentId: payload.departmentId, password: payload.password }
     }
   }
   closeModal()
@@ -202,7 +209,8 @@ function remove(user) {
   padding: 10px 12px;
   border-bottom: 1px solid #e5e7eb;
   text-align: left;
-  white-space: nowrap;
+  white-space: normal;
+  word-break: break-word;
 }
 .table th { background: #f9fafb; font-weight: 700; }
 

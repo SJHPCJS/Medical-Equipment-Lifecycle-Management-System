@@ -4,7 +4,7 @@
     <div class="subtitle" style="margin-top:8px;">Receiving pending purchase orders for onboarding.</div>
 
     <div class="table-wrapper" style="margin-top:16px; overflow:auto;">
-      <table class="table">
+      <table class="table" style="table-layout:fixed; width:100%;">
         <thead>
           <tr>
             <th>Order ID</th>
@@ -20,9 +20,9 @@
             <td>{{ o.type }}</td>
             <td>{{ o.quantity }}</td>
             <td>{{ o.requester }}</td>
-            <td>
-              <button class="btn" @click="accept(o)">Accept</button>
-              <button class="btn" style="margin-left:8px;" @click="reject(o)">Reject</button>
+            <td style="white-space:nowrap;">
+              <button class="btn btn-green" @click="accept(o)">Accept</button>
+              <button class="btn btn-red" style="margin-left:8px;" @click="reject(o)">Reject</button>
             </td>
           </tr>
           <tr v-if="orders.length===0">
@@ -47,6 +47,6 @@ function reject(o) { alert(`Demo only: rejected ${o.id}`); state.orders = state.
 
 <style scoped>
 .table { width: 100%; border-collapse: collapse; }
-.table th, .table td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; text-align: left; white-space: nowrap; }
+.table th, .table td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; text-align: left; white-space: normal; word-break: break-word; }
 .table th { background: #f9fafb; font-weight: 700; }
 </style>
