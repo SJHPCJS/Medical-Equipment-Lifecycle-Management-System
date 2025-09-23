@@ -10,9 +10,9 @@ export const repairConfirmTodos = [
 ]
 
 export const deptDevices = [
-  { id: 'EQ-0001', type: 'ECG Monitor', status: 'In Use', vendor: 'Pulse Ltd.', departmentId: 'DPT-001' },
-  { id: 'EQ-0004', type: 'Ultrasound', status: 'In Use', vendor: 'SonoPlus', departmentId: 'DPT-001' },
-  { id: 'EQ-0007', type: 'Infusion Pump', status: 'Under Repair', vendor: 'CareFlow', departmentId: 'DPT-001' },
+  { id: 'EQ-0001', type: 'ECG Monitor', status: 'In Use', vendor: 'Pulse Ltd.', departmentId: 'DPT-001', description: 'Bedside ECG monitor with 12-lead support and alarm notifications.', diseases: ['Arrhythmia', 'Ischemia monitoring'] },
+  { id: 'EQ-0004', type: 'Ultrasound', status: 'In Use', vendor: 'SonoPlus', departmentId: 'DPT-001', description: 'Cart-based ultrasound for abdominal and vascular scans.', diseases: ['Gallstones', 'DVT'] },
+  { id: 'EQ-0007', type: 'Infusion Pump', status: 'Under Repair', vendor: 'CareFlow', departmentId: 'DPT-001', description: 'Smart infusion system; undergoing pump calibration.', diseases: ['Sepsis', 'Chemotherapy administration'] },
 ]
 
 export const usageLogs = [
