@@ -33,19 +33,33 @@ const password = ref('')
 const error = ref('')
 const mailtoHref = 'mailto:support@example.com?subject=Forgot%20Password'
 
-function onSubmit() {
+async function onSubmit() {
   error.value = ''
-  if (password.value !== '123456') {
-    error.value = 'Password must be 123456 for demo.'
-    return
+  try {
+    const resp = await fetch(`/req/account/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ account: username.value, password: password.value }),
+    })
+    if (!resp.ok) throw new Error('HTTP')
+    const json = await resp.json()
+    if (json && json.code === '000') {
+      const id = String(json.data || '')
+      if (!id) throw new Error('Empty id')
+      localStorage.setItem('demo_logged_in', '1')
+      localStorage.setItem('account_id', id)
+      const first = id.charAt(0).toUpperCase()
+      if (first === 'A') return router.push('/admin')
+      if (first === 'E') return router.push('/equipment')
+      if (first === 'D') return router.push('/department')
+      if (first === 'P') return router.push('/procurement')
+      return router.push('/admin')
+    } else {
+      error.value = 'Invalid username or password.'
+    }
+  } catch (e) {
+    error.value = 'Network error. Please try again.'
   }
-  localStorage.setItem('demo_logged_in', '1')
-  localStorage.setItem('demo_username', username.value || 'Admin')
-  const name = (username.value || '').toLowerCase()
-  if (name === 'equipment') return router.push('/equipment')
-  if (name === 'department') return router.push('/department')
-  if (name === 'procurement') return router.push('/procurement')
-  return router.push('/admin')
 }
 </script>
 

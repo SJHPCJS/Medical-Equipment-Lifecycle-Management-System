@@ -1,0 +1,6 @@
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: root
+    password: akouiwe!5
+    url: jdbc:mysql://47.108.229.95:3306/melms
