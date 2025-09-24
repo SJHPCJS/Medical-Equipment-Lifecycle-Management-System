@@ -1,7 +1,7 @@
 <template>
   <div class="card" style="padding:16px;">
     <div class="title-lg">Organization & Departments</div>
-    <div class="subtitle" style="margin-top:8px;">Manage departments using frontend-only mock data.</div>
+    <div class="subtitle" style="margin-top:8px;">Data is loaded from backend APIs.</div>
 
     <div style="margin-top:16px; display:flex; gap:8px; justify-content:space-between; flex-wrap:wrap;">
       <div style="display:flex; gap:8px;">
@@ -15,8 +15,8 @@
       <table class="table" style="table-layout:fixed; width:100%;">
         <thead>
           <tr>
-            <th>Dept ID</th>
-            <th>Name</th>
+            <th style="width:140px;">Dept ID</th>
+            <th style="min-width:220px;">Name</th>
             <th style="width:120px;">Actions</th>
           </tr>
         </thead>
@@ -43,7 +43,7 @@
         <div class="form-grid">
           <div>
             <label>Dept ID</label>
-            <input class="input" :value="modal.form.id" disabled />
+            <input class="input" :value="modal.form.id || '(auto)'" disabled />
           </div>
           <div>
             <label>Name</label>
@@ -60,10 +60,51 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed } from 'vue'
-import { clone, departments as seedDepartments } from '@/mocks/admin.js'
+import { reactive, ref, computed, onMounted } from 'vue'
+function showDialog(message) {
+  let overlay = document.createElement('div')
+  overlay.style.position = 'fixed'
+  overlay.style.inset = '0'
+  overlay.style.background = 'rgba(0,0,0,0.35)'
+  overlay.style.display = 'flex'
+  overlay.style.alignItems = 'center'
+  overlay.style.justifyContent = 'center'
+  overlay.style.zIndex = '9999'
+  const box = document.createElement('div')
+  box.className = 'card'
+  box.style.padding = '16px'
+  box.style.maxWidth = '420px'
+  box.style.minWidth = '280px'
+  box.innerHTML = `<div style="font-weight:700;">Notice</div><div style="margin-top:8px;">${message}</div><div style="margin-top:12px; display:flex; justify-content:flex-end;"><button id="ok" class="btn btn-primary">OK</button></div>`
+  overlay.appendChild(box)
+  document.body.appendChild(overlay)
+  overlay.querySelector('#ok').addEventListener('click', () => { document.body.removeChild(overlay) })
+}
 
-const state = reactive({ departments: clone(seedDepartments) })
+function showConfirm(message) {
+  return new Promise(resolve => {
+    let overlay = document.createElement('div')
+    overlay.style.position = 'fixed'
+    overlay.style.inset = '0'
+    overlay.style.background = 'rgba(0,0,0,0.35)'
+    overlay.style.display = 'flex'
+    overlay.style.alignItems = 'center'
+    overlay.style.justifyContent = 'center'
+    overlay.style.zIndex = '9999'
+    const box = document.createElement('div')
+    box.className = 'card'
+    box.style.padding = '16px'
+    box.style.maxWidth = '420px'
+    box.style.minWidth = '280px'
+    box.innerHTML = `<div style="font-weight:700;">Confirm</div><div style="margin-top:8px;">${message}</div><div style="margin-top:12px; display:flex; justify-content:flex-end; gap:8px;"><button id="cancel" class="btn">Cancel</button><button id="ok" class="btn btn-primary">OK</button></div>`
+    overlay.appendChild(box)
+    document.body.appendChild(overlay)
+    overlay.querySelector('#cancel').addEventListener('click', () => { document.body.removeChild(overlay); resolve(false) })
+    overlay.querySelector('#ok').addEventListener('click', () => { document.body.removeChild(overlay); resolve(true) })
+  })
+}
+
+const state = reactive({ departments: [] })
 const keyword = ref('')
 
 const filtered = computed(() => {
@@ -73,17 +114,12 @@ const filtered = computed(() => {
 
 const modal = reactive({ open: false, mode: 'create', form: { id: '', name: '' } })
 
-function nextDeptId() {
-  const num = state.departments
-    .map(d => Number((d.id || '').split('-')[1] || 0))
-    .reduce((m, v) => Math.max(m, v), 0) + 1
-  return `DPT-${String(num).padStart(3, '0')}`
-}
+function nextDeptId() { return '' }
 
 function openCreate() {
   modal.open = true
   modal.mode = 'create'
-  modal.form = { id: nextDeptId(), name: '' }
+  modal.form = { id: '', name: '' }
 }
 
 function openEdit(d) {
@@ -94,21 +130,37 @@ function openEdit(d) {
 
 function closeModal() { modal.open = false }
 
-function save() {
-  const payload = clone(modal.form)
+async function refresh() {
+  const resp = await fetch('/req/admin/departments')
+  const json = await resp.json()
+  if (json.code === '000') state.departments = json.data || []
+}
+
+async function save() {
+  const payload = { ...modal.form }
+  if (!payload.name || !payload.name.trim()) { return showDialog('Department name is required') }
   if (modal.mode === 'create') {
-    state.departments.push(payload)
+    const resp = await fetch('/req/admin/newDepartment', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ department_name: payload.name }) })
+    const json = await resp.json().catch(() => ({ code: 'ERR' }))
+    if (json.code !== '000') { return showDialog(json.message || 'Failed to add department') }
   } else {
-    const idx = state.departments.findIndex(d => d.id === payload.id)
-    if (idx !== -1) state.departments[idx] = payload
+    const resp = await fetch('/req/admin/changeDepartmentName', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ department_id: payload.id, department_name: payload.name }) })
+    const json = await resp.json().catch(() => ({ code: 'ERR' }))
+    if (json.code !== '000') { return showDialog(json.message || 'Failed to update department') }
   }
+  await refresh()
   closeModal()
 }
 
-function remove(dep) {
-  if (!confirm(`Delete department "${dep.name}"?`)) return
-  state.departments = state.departments.filter(d => d.id !== dep.id)
+async function remove(dep) {
+  if (!(await showConfirm(`Delete department "${dep.name}"?`))) return
+  const resp = await fetch(`/req/admin/delDepartment?departmentId=${encodeURIComponent(dep.id)}`, { method: 'DELETE' })
+  const json = await resp.json().catch(() => ({ code: 'ERR' }))
+  if (json.code !== '000') return showDialog(json.message || 'Failed to delete department')
+  await refresh()
 }
+
+onMounted(refresh)
 </script>
 
 <style scoped>

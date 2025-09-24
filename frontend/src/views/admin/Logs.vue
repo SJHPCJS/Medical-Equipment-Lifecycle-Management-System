@@ -1,7 +1,7 @@
 <template>
   <div class="card" style="padding:16px;">
     <div class="title-lg">Logs & Audit</div>
-    <div class="subtitle" style="margin-top:8px;">Track system-level operations. Frontend-only mock.</div>
+    <div class="subtitle" style="margin-top:8px;">Data is loaded from backend APIs.</div>
 
     <!-- Filters -->
     <div class="filters" style="margin-top:16px; display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; align-items:end;">
@@ -30,7 +30,6 @@
           <tr>
             <th>Time</th>
             <th>User</th>
-            <th>Target</th>
             <th>Action</th>
           </tr>
         </thead>
@@ -38,11 +37,10 @@
           <tr v-for="item in paged" :key="item.id">
             <td>{{ formatTime(item.timestamp) }}</td>
             <td>{{ item.user }}</td>
-            <td>{{ item.target }}</td>
             <td>{{ item.action }}</td>
           </tr>
           <tr v-if="paged.length===0">
-            <td colspan="4" style="text-align:center; color:var(--color-muted);">No data</td>
+            <td colspan="3" style="text-align:center; color:var(--color-muted);">No data</td>
           </tr>
         </tbody>
       </table>
@@ -65,10 +63,9 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
-import { clone, logs as seedLogs } from '@/mocks/admin.js'
+import { ref, reactive, computed, onMounted } from 'vue'
 
-const state = reactive({ logs: clone(seedLogs) })
+const state = reactive({ logs: [] })
 
 const filters = reactive({ keyword: '', start: '', end: '' })
 const page = ref(1)
@@ -83,7 +80,7 @@ const filtered = computed(() => {
   return state.logs.filter(l => {
     const t = new Date(l.timestamp).getTime()
     const matchTime = t >= startMs && t <= endMs
-    const join = `${l.user} ${l.target} ${l.action}`.toLowerCase()
+    const join = `${l.user} ${l.action}`.toLowerCase()
     const matchKw = !kw || join.includes(kw)
     return matchTime && matchKw
   })
@@ -102,7 +99,7 @@ function resetFilters() {
 }
 
 function exportCsv() {
-  const rows = [['Time','User','Target','Action'], ...filtered.value.map(r => [r.timestamp, r.user, r.target, r.action])]
+  const rows = [['Time','User','Action'], ...filtered.value.map(r => [r.timestamp, r.user, r.action])]
   const csv = rows.map(r => r.map(x => `"${String(x).replaceAll('"','""')}"`).join(',')).join('\n')
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
@@ -112,6 +109,25 @@ function exportCsv() {
   a.click()
   URL.revokeObjectURL(url)
 }
+
+async function refresh() {
+  try {
+    const resp = await fetch('/req/admin/logs')
+    const json = await resp.json()
+    if (json.code === '000') {
+      state.logs = (json.data || []).map(x => ({
+        id: x.log_id,
+        timestamp: x.log_time,
+        user: x.log_user_id,
+        action: x.log_action,
+      }))
+    }
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+onMounted(refresh)
 </script>
 
 <style scoped>

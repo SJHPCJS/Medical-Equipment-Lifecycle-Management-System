@@ -13,11 +13,11 @@ public class LoginController {
     private LoginMapper loginMapper;
     @PostMapping("/req/account/login")
     public Result login(@RequestBody Map<String, String> params) {
-        String account = params.get("account");
+        String name = params.get("name");
         String password = params.get("password");
-        String accountId = loginMapper.login(account, password);
-        if (accountId != null) {
-            return Result.success("ok", accountId);
+        Map<String,Object> res = loginMapper.login(name, password);
+        if (res != null && res.get("account_id") != null) {
+            return Result.success("ok", res);
         }
         return Result.fail("401","Invalid credentials",null);
     }

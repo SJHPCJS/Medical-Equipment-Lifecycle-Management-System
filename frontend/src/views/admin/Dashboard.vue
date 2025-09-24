@@ -6,18 +6,34 @@
       <StatCard label="Total Tickets" :value="totalTickets" />
     </div>
     <div class="card" style="margin-top:16px; padding:16px;">
-      <div class="subtitle">System Administrator dashboard using frontend-only mock data.</div>
+      <div class="subtitle">Data is loaded from backend APIs.</div>
     </div>
   </div>
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import StatCard from '@/components/layout/StatCard.vue'
-import { departments, users, ticketsSummary } from '@/mocks/admin.js'
 
-const totalDepartments = departments.length
-const totalEmployees = users.length
-const totalTickets = ticketsSummary.totalTickets
+const totalDepartments = ref(0)
+const totalEmployees = ref(0)
+const totalTickets = ref(0)
+
+async function load() {
+  try {
+    const resp = await fetch('/req/admin/overall')
+    const json = await resp.json()
+    if (json.code === '000') {
+      totalDepartments.value = json.data.departmentCount || 0
+      totalEmployees.value = json.data.employeeCount || 0
+      totalTickets.value = json.data.ticketCount || 0
+    }
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+onMounted(load)
 </script>
 
 <style scoped>

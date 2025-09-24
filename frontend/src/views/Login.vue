@@ -7,8 +7,8 @@
         <div class="subtitle">Demo accounts (password for all: 123456):
           admin | equipment | department | procurement</div>
         <form class="form" @submit.prevent="onSubmit">
-          <label>Username</label>
-          <input class="input" v-model="username" placeholder="Enter username" />
+          <label>Name</label>
+          <input class="input" v-model="name" placeholder="Enter name" />
           <label>Password</label>
           <input class="input" type="password" v-model="password" placeholder="Enter password" />
           <div class="actions">
@@ -28,7 +28,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
-const username = ref('')
+const name = ref('')
 const password = ref('')
 const error = ref('')
 const mailtoHref = 'mailto:support@example.com?subject=Forgot%20Password'
@@ -39,20 +39,21 @@ async function onSubmit() {
     const resp = await fetch(`/req/account/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ account: username.value, password: password.value }),
+      body: JSON.stringify({ name: name.value, password: password.value }),
     })
     if (!resp.ok) throw new Error('HTTP')
     const json = await resp.json()
     if (json && json.code === '000') {
-      const id = String(json.data || '')
-      if (!id) throw new Error('Empty id')
+      const id = String(json.data?.account_id || '')
+      const role = String(json.data?.role || '')
+      if (!id || !role) throw new Error('Empty id/role')
       localStorage.setItem('demo_logged_in', '1')
       localStorage.setItem('account_id', id)
-      const first = id.charAt(0).toUpperCase()
-      if (first === 'A') return router.push('/admin')
-      if (first === 'E') return router.push('/equipment')
-      if (first === 'D') return router.push('/department')
-      if (first === 'P') return router.push('/procurement')
+      localStorage.setItem('role', role)
+      if (role === 'Admin' || role === 'SYS_ADMIN') return router.push('/admin')
+      if (role === 'E-Manager' || role === 'EQUIP_MANAGER') return router.push('/equipment')
+      if (role === 'D-User' || role === 'DEPT_USER') return router.push('/department')
+      if (role === 'P-Staff' || role === 'PROC_STAFF') return router.push('/procurement')
       return router.push('/admin')
     } else {
       error.value = 'Invalid username or password.'

@@ -1,11 +1,11 @@
 <template>
   <div class="card" style="padding:16px;">
     <div class="title-lg">Users & Access - User Management</div>
-    <div class="subtitle" style="margin-top:8px;">Frontend-only mock. Replace with API later.</div>
+    <div class="subtitle" style="margin-top:8px;">Data is loaded from backend APIs.</div>
 
     <!-- Filters -->
     <div class="filters" style="margin-top:16px; display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
-      <input class="input" v-model="filters.username" placeholder="Search by username" />
+      <input class="input" v-model="filters.username" placeholder="Search by name" />
       <div>
         <label>User Role</label>
         <MultiSelect v-model="filters.roleIds" :options="roles.map(r => ({ value: r.id, label: r.name }))" placeholder="All roles" />
@@ -22,13 +22,13 @@
 
     <!-- Table -->
     <div class="table-wrapper" style="margin-top:16px; overflow:auto;">
-      <table class="table">
+      <table class="table" style="table-layout:fixed; width:100%;">
         <thead>
           <tr>
-            <th>User ID</th>
-            <th>Username</th>
-            <th>User Role</th>
-            <th>Department</th>
+            <th style="width:140px;">User ID</th>
+            <th style="min-width:220px;">Name</th>
+            <th style="min-width:220px;">User Role</th>
+            <th style="min-width:180px;">Department</th>
             <th style="width:140px;">Actions</th>
           </tr>
         </thead>
@@ -69,13 +69,13 @@
       <div class="modal card">
         <div class="title-lg">{{ modal.mode === 'create' ? 'Add User' : 'Edit User' }}</div>
         <div class="form-grid">
-          <div>
+          <div v-if="modal.mode==='edit'">
             <label>User ID</label>
             <input class="input" :value="modal.form.id" disabled />
           </div>
           <div>
-            <label>Username</label>
-            <input class="input" v-model="modal.form.username" placeholder="Enter username" />
+            <label>Name</label>
+            <input class="input" v-model="modal.form.username" placeholder="Enter name" />
           </div>
           <div>
             <label>User Role</label>
@@ -108,13 +108,62 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, watch } from 'vue'
+import { reactive, ref, computed, watch, onMounted } from 'vue'
 import MultiSelect from '@/components/MultiSelect.vue'
-import { clone, users as seedUsers, roles, departments, getNextUserId } from '@/mocks/admin.js'
+function showDialog(message) {
+  let overlay = document.createElement('div')
+  overlay.style.position = 'fixed'
+  overlay.style.inset = '0'
+  overlay.style.background = 'rgba(0,0,0,0.35)'
+  overlay.style.display = 'flex'
+  overlay.style.alignItems = 'center'
+  overlay.style.justifyContent = 'center'
+  overlay.style.zIndex = '9999'
+  const box = document.createElement('div')
+  box.className = 'card'
+  box.style.padding = '16px'
+  box.style.maxWidth = '420px'
+  box.style.minWidth = '280px'
+  box.innerHTML = `<div style="font-weight:700;">Notice</div><div style="margin-top:8px;">${message}</div><div style="margin-top:12px; display:flex; justify-content:flex-end;"><button id="ok" class="btn btn-primary">OK</button></div>`
+  overlay.appendChild(box)
+  document.body.appendChild(overlay)
+  overlay.querySelector('#ok').addEventListener('click', () => { document.body.removeChild(overlay) })
+}
 
-const state = reactive({
-  users: clone(seedUsers),
-})
+function showConfirm(message) {
+  return new Promise(resolve => {
+    let overlay = document.createElement('div')
+    overlay.style.position = 'fixed'
+    overlay.style.inset = '0'
+    overlay.style.background = 'rgba(0,0,0,0.35)'
+    overlay.style.display = 'flex'
+    overlay.style.alignItems = 'center'
+    overlay.style.justifyContent = 'center'
+    overlay.style.zIndex = '9999'
+    const box = document.createElement('div')
+    box.className = 'card'
+    box.style.padding = '16px'
+    box.style.maxWidth = '420px'
+    box.style.minWidth = '280px'
+    box.innerHTML = `<div style=\"font-weight:700;\">Confirm</div><div style=\"margin-top:8px;\">${message}</div><div style=\"margin-top:12px; display:flex; justify-content:flex-end; gap:8px;\"><button id=\"cancel\" class=\"btn\">Cancel</button><button id=\"ok\" class=\"btn btn-primary\">OK</button></div>`
+    overlay.appendChild(box)
+    document.body.appendChild(overlay)
+    overlay.querySelector('#cancel').addEventListener('click', () => { document.body.removeChild(overlay); resolve(false) })
+    overlay.querySelector('#ok').addEventListener('click', () => { document.body.removeChild(overlay); resolve(true) })
+  })
+}
+
+// Keep roles static on frontend for now
+const roles = [
+  { id: 'SYS_ADMIN', name: 'System Administrator' },
+  { id: 'EQUIP_MANAGER', name: 'Equipment Manager' },
+  { id: 'DEPT_USER', name: 'Department User' },
+  { id: 'PROC_STAFF', name: 'Procurement Staff' },
+]
+
+const departments = ref([])
+
+const state = reactive({ users: [] })
 
 const filters = reactive({ username: '', roleIds: [], departmentIds: [] })
 const page = ref(1)
@@ -152,28 +201,30 @@ function roleName(roleId) {
 }
 
 function departmentName(deptId) {
-  const d = departments.find(d => d.id === deptId)
+  const d = departments.value.find(d => d.id === deptId)
   return d ? d.name : '-'
 }
 
 const modal = reactive({
   open: false,
   mode: 'create', // 'create' | 'edit'
-  form: { id: '', username: '', roleId: roles[0]?.id || '', departmentId: departments[0]?.id || '', password: '' },
+  form: { id: '', username: '', roleId: roles[0]?.id || '', departmentId: '', password: '' },
 })
 const showPassword = ref(false)
+
+function nextUserId() { return '' }
 
 function openCreate() {
   modal.open = true
   modal.mode = 'create'
-  modal.form = { id: getNextUserId(state.users), username: '', roleId: roles[0]?.id || '', departmentId: departments[0]?.id || '', password: '' }
+  modal.form = { id: '', username: '', roleId: roles[0]?.id || '', departmentId: departments.value[0]?.id || '', password: '' }
   showPassword.value = false
 }
 
 function openEdit(user) {
   modal.open = true
   modal.mode = 'edit'
-  modal.form = { id: user.id, username: user.username, roleId: user.roleId, departmentId: user.departmentId, password: user.password || '' }
+  modal.form = { id: user.id, username: user.username, roleId: user.roleId, departmentId: user.departmentId, password: '' }
   showPassword.value = false
 }
 
@@ -181,23 +232,73 @@ function closeModal() {
   modal.open = false
 }
 
-function save() {
-  const payload = clone(modal.form)
-  if (modal.mode === 'create') {
-    state.users.push({ id: payload.id, username: payload.username, roleId: payload.roleId, departmentId: payload.departmentId, password: payload.password })
-  } else {
-    const idx = state.users.findIndex(u => u.id === payload.id)
-    if (idx !== -1) {
-      state.users[idx] = { id: payload.id, username: payload.username, roleId: payload.roleId, departmentId: payload.departmentId, password: payload.password }
-    }
+function normalizeRole(dbRole) {
+  switch (dbRole) {
+    case 'Admin': return 'SYS_ADMIN'
+    case 'E-Manager': return 'EQUIP_MANAGER'
+    case 'D-User': return 'DEPT_USER'
+    case 'P-Staff': return 'PROC_STAFF'
+    default: return dbRole || ''
   }
+}
+
+function denormalizeRole(uiRole) {
+  switch (uiRole) {
+    case 'SYS_ADMIN': return 'Admin'
+    case 'EQUIP_MANAGER': return 'E-Manager'
+    case 'DEPT_USER': return 'D-User'
+    case 'PROC_STAFF': return 'P-Staff'
+    default: return uiRole || ''
+  }
+}
+
+async function refresh() {
+  const resp = await fetch('/req/admin/users')
+  const json = await resp.json()
+  if (json.code === '000') {
+    state.users = (json.data || []).map(u => ({
+      id: u.id,
+      username: u.username,
+      roleId: normalizeRole(u.roleId),
+      departmentId: u.departmentId,
+    }))
+  }
+}
+
+async function save() {
+  const p = { ...modal.form }
+  if (!p.username || !p.username.trim()) { return showDialog('Name is required') }
+  if (modal.mode === 'create' && (!p.password || !p.password.trim())) { return showDialog('Password is required') }
+  if (modal.mode === 'create') {
+    const resp = await fetch('/req/admin/user', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: p.username, password: p.password || '', role: denormalizeRole(p.roleId), department_id: p.departmentId }) })
+    const json = await resp.json().catch(() => ({ code: 'ERR' }))
+    if (json.code !== '000') { return showDialog(json.message || 'Failed to add user') }
+  } else {
+    const resp = await fetch('/req/admin/user', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account_id: String(p.id), name: p.username, password: p.password || '', role: denormalizeRole(p.roleId), department_id: p.departmentId }) })
+    const json = await resp.json().catch(() => ({ code: 'ERR' }))
+    if (json.code !== '000') { return showDialog(json.message || 'Failed to update user') }
+  }
+  await refresh()
   closeModal()
 }
 
-function remove(user) {
-  if (!confirm(`Delete user "${user.username}"?`)) return
-  state.users = state.users.filter(u => u.id !== user.id)
+async function remove(user) {
+  if (!(await showConfirm(`Delete user "${user.username}"?`))) return
+  const resp = await fetch(`/req/admin/user?accountId=${encodeURIComponent(user.id)}`, { method: 'DELETE' })
+  const json = await resp.json().catch(() => ({ code: 'ERR' }))
+  if (json.code !== '000') return showDialog(json.message || 'Failed to delete user')
+  await refresh()
 }
+
+async function loadDepartments() {
+  const resp = await fetch('/req/admin/departments')
+  const json = await resp.json()
+  if (json.code === '000') departments.value = json.data || []
+}
+
+onMounted(async () => {
+  await Promise.all([loadDepartments(), refresh()])
+})
 </script>
 
 <style scoped>

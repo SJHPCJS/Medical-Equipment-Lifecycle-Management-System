@@ -73,4 +73,7 @@ body {
   font-size: 13px;
 }
 
+/* Toast/modal uniform styles are handled within components. Ensure table containers avoid horizontal scroll when possible. */
+.table-wrapper{ max-width: 100%; overflow-x:auto; }
+
 
