@@ -50,24 +50,41 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue'
-import { clone, scrapApplications as seed } from '@/mocks/equipment.js'
+import { reactive, onMounted } from 'vue'
+import axios from 'axios'
 
-const state = reactive({ list: clone(seed) })
+const state = reactive({ list: [] })
 
-function approve(s) { s.status = 'Approved' }
-function reject(s) { s.status = 'Rejected' }
-function view(s) { alert(`View ${s.id} (demo only)`) }
+onMounted(async () => {
+  const res = await axios.get('/req/scrap')
+  state.list = res.data
+})
 
-function onUploadPhoto(e, s) {
+async function approve(s) {
+  await axios.post(`/req/scrap/${s.scrapId}/approve`)
+  s.status = 'Approved'
+}
+async function reject(s) {
+  await axios.post(`/req/scrap/${s.scrapId}/reject`)
+  s.status = 'Rejected'
+}
+function view(s) {
+  window.open(s.photoUrl, '_blank')
+}
+
+async function onUploadPhoto(e, s) {
   const file = e.target.files && e.target.files[0]
   if (!file) return
-  const reader = new FileReader()
-  reader.onload = () => { s.photoUrl = String(reader.result || '') }
-  reader.readAsDataURL(file)
+  const formData = new FormData()
+  formData.append('file', file)
+  const res = await axios.post(`/req/scrap/${s.scrapId}/upload`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+  s.photoUrl = res.data
   e.target.value = ''
 }
 </script>
+
 
 <style scoped>
 .table { width: 100%; border-collapse: collapse; }

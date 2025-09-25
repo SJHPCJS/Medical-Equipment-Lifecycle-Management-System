@@ -61,33 +61,41 @@
 </template>
 
 <script setup>
-import { reactive, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import MultiSelect from '@/components/MultiSelect.vue'
-import { clone, repairTickets as seed } from '@/mocks/equipment.js'
+import axios from 'axios'
 
-const state = reactive({ tickets: clone(seed) })
-const tickets = state.tickets
+const tickets = ref([])
 const statuses = ['Pending Review','In Repair','In Acceptance','Completed','Rejected']
 
-const departmentList = computed(() => Array.from(new Set(tickets.map(t => t.department))))
+const departmentList = computed(() => Array.from(new Set(tickets.value.map(t => t.departmentName))))
 
-const filters = reactive({ statuses: [], departments: [] })
-const filtered = computed(() => tickets.filter(t => {
-  const matchStatus = filters.statuses.length===0 || filters.statuses.includes(t.status)
-  const matchDept = filters.departments.length===0 || filters.departments.includes(t.department)
+const filters = ref({ statuses: [], departments: [] })
+const filtered = computed(() => tickets.value.filter(t => {
+  const matchStatus = filters.value.statuses.length===0 || filters.value.statuses.includes(t.status)
+  const matchDept = filters.value.departments.length===0 || filters.value.departments.includes(t.departmentName)
   return matchStatus && matchDept
 }))
 
-function resetFilters() { filters.statuses = []; filters.departments = [] }
+onMounted(async () => {
+  const res = await axios.get('/api/repair-tickets')
+  tickets.value = res.data
+})
 
+function resetFilters() { filters.value.statuses = []; filters.value.departments = [] }
 function formatTime(ts) { try { return new Date(ts).toLocaleString() } catch { return ts } }
 
-function save(t) { alert(`Saved ${t.id} (demo only)`) }
-function complete(t) {
+async function save(t) {
+  await axios.put(`/api/repair-tickets/${t.ticketId}`, t)
+}
+
+async function complete(t) {
+  await axios.post(`/api/repair-tickets/${t.ticketId}/complete`)
   t.status = 'Completed'
   t.finishedAt = new Date().toISOString()
 }
 </script>
+
 
 <style scoped>
 .table { width: 100%; border-collapse: collapse; }

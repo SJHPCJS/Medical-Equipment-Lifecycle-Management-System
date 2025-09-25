@@ -26,15 +26,43 @@
 </template>
 
 <script setup>
-import { reactive } from 'vue'
-import { clone, receivingOrders as seed } from '@/mocks/equipment.js'
+import { reactive, onMounted } from 'vue'
+import axios from 'axios'
 import { DEFAULT_DEVICE_PLACEHOLDER as placeholder } from '@/utils/images.js'
 
-const state = reactive({ orders: clone(seed) })
+const state = reactive({ orders: [] })
 const orders = state.orders
 
-function accept(o) { alert(`Demo only: accepted ${o.id}`); state.orders = state.orders.filter(x => x.id !== o.id) }
-function reject(o) { alert(`Demo only: rejected ${o.id}`); state.orders = state.orders.filter(x => x.id !== o.id) }
+async function loadOrders() {
+  try {
+    const res = await axios.get('/req/purchase-orders/pending')
+    state.orders = res.data
+  } catch (err) {
+    console.error('Failed to load purchase orders', err)
+  }
+}
+
+async function accept(o) {
+  try {
+    await axios.post(`/req/purchase-orders/${o.id}/accept`)
+    await loadOrders()
+  } catch (err) {
+    console.error('Accept failed', err)
+  }
+}
+
+async function reject(o) {
+  try {
+    await axios.post(`/req/purchase-orders/${o.id}/reject`)
+    await loadOrders()
+  } catch (err) {
+    console.error('Reject failed', err)
+  }
+}
+
+onMounted(() => {
+  loadOrders()
+})
 </script>
 
 <style scoped>
