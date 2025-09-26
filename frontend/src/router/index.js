@@ -5,6 +5,7 @@ const Login = () => import('@/views/Login.vue')
 const AdminLayout = () => import('@/views/admin/AdminLayout.vue')
 const Dashboard = () => import('@/views/admin/Dashboard.vue')
 const Users = () => import('@/views/admin/Users.vue')
+const Account = () => import('@/views/admin/Account.vue')
 // removed Roles route
 const Orgs = () => import('@/views/admin/Orgs.vue')
 const Settings = () => import('@/views/admin/Settings.vue')
@@ -50,12 +51,12 @@ const router = createRouter({
       component: AdminLayout,
       children: [
         { path: '', redirect: '/admin/dashboard' },
-        { path: 'dashboard', component: Dashboard },
-        { path: 'users', component: Users },
-        { path: 'orgs', component: Orgs },
-        { path: 'settings', component: Settings },
-        { path: 'logs', component: Logs },
-        // removed notices
+        { path: 'dashboard', component: Dashboard, meta: { title: 'Dashboard', showCharts: true } },
+        { path: 'users', component: Users, meta: { title: 'User Management', showCharts: true } },
+        { path: 'orgs', component: Orgs, meta: { title: 'Departments', showCharts: false } },
+        { path: 'settings', component: Settings, meta: { title: 'Settings', showCharts: false } },
+        { path: 'logs', component: Logs, meta: { title: 'Logs', showCharts: false } },
+        { path: 'account', component: Account, meta: { title: 'Account', showCharts: false } },
       ],
     },
     {

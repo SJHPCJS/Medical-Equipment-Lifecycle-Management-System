@@ -3,8 +3,8 @@
     <div class="title-lg">Organization & Departments</div>
     <div class="subtitle" style="margin-top:8px;">Data is loaded from backend APIs.</div>
 
-    <div style="margin-top:16px; display:flex; gap:8px; justify-content:space-between; flex-wrap:wrap;">
-      <div style="display:flex; gap:8px;">
+    <div class="ui-toolbar" style="margin-top:16px; justify-content:space-between; width:100%">
+      <div style="display:flex; gap:8px; flex-wrap:wrap;">
         <input class="input" v-model="keyword" placeholder="Search by name" />
         <button class="btn" @click="keyword=''">Reset</button>
       </div>
@@ -12,7 +12,7 @@
     </div>
 
     <div class="table-wrapper" style="margin-top:16px; overflow:auto;">
-      <table class="table" style="table-layout:fixed; width:100%;">
+      <table class="ui-table" style="width:100%; max-width:100%; table-layout:auto;">
         <thead>
           <tr>
             <th style="width:140px;">Dept ID</th>
@@ -21,7 +21,11 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="d in filtered" :key="d.id">
+          <tr v-if="loading"><td colspan="3"><TableSkeleton :rows="5" /></td></tr>
+          <tr v-else-if="filtered.length===0">
+            <td colspan="3"><EmptyState title="No departments" hint="Create a department to get started." /></td>
+          </tr>
+          <tr v-else v-for="d in filtered" :key="d.id">
             <td>{{ d.id }}</td>
             <td>{{ d.name }}</td>
             <td style="white-space:nowrap;">
@@ -29,18 +33,15 @@
               <button class="btn btn-red" style="margin-left:8px;" @click="remove(d)">Delete</button>
             </td>
           </tr>
-          <tr v-if="filtered.length===0">
-            <td colspan="3" style="text-align:center; color:var(--color-muted);">No data</td>
-          </tr>
         </tbody>
       </table>
     </div>
 
     <!-- Modal -->
-    <div v-if="modal.open" class="modal-backdrop">
-      <div class="modal card">
+    <div v-if="modal.open" class="ui-modal-backdrop">
+      <div class="ui-modal card">
         <div class="title-lg">{{ modal.mode==='create' ? 'Add Department' : 'Edit Department' }}</div>
-        <div class="form-grid">
+        <div class="ui-form-grid">
           <div>
             <label>Dept ID</label>
             <input class="input" :value="modal.form.id || '(auto)'" disabled />
@@ -61,6 +62,8 @@
 
 <script setup>
 import { reactive, ref, computed, onMounted } from 'vue'
+import EmptyState from '@/components/admin/EmptyState.vue'
+import TableSkeleton from '@/components/admin/TableSkeleton.vue'
 function showDialog(message) {
   let overlay = document.createElement('div')
   overlay.style.position = 'fixed'
@@ -105,6 +108,7 @@ function showConfirm(message) {
 }
 
 const state = reactive({ departments: [] })
+const loading = ref(true)
 const keyword = ref('')
 
 const filtered = computed(() => {
@@ -131,9 +135,11 @@ function openEdit(d) {
 function closeModal() { modal.open = false }
 
 async function refresh() {
+  loading.value = true
   const resp = await fetch('/req/admin/departments')
   const json = await resp.json()
   if (json.code === '000') state.departments = json.data || []
+  loading.value = false
 }
 
 async function save() {
@@ -164,12 +170,5 @@ onMounted(refresh)
 </script>
 
 <style scoped>
-.table { width: 100%; border-collapse: collapse; }
-.table th, .table td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; text-align: left; white-space: nowrap; }
-.table th { background: #f9fafb; font-weight: 700; }
-
-.modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display:flex; align-items:center; justify-content:center; padding:16px; }
-.modal { width: min(560px, 100%); padding: 16px; }
-.form-grid { margin-top: 16px; display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
 </style>
 

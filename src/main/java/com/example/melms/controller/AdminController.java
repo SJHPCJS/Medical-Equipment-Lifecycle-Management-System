@@ -36,6 +36,31 @@ public class AdminController {
         }
     }
 
+    // Dashboard - department employee counts (from tb_account only; join department for names)
+    @GetMapping("/req/admin/departmentEmployeeCounts")
+    public Result departmentEmployeeCounts() {
+        try {
+            return Result.success("ok", adminMapper.countEmployeesByDepartment());
+        } catch (Exception e) {
+            return Result.fail("500", e.getMessage(), null);
+        }
+    }
+
+    // Dashboard - ticket categories (repair vs procure) — table sizes only
+    @GetMapping("/req/admin/ticketCategoryCounts")
+    public Result ticketCategoryCounts() {
+        try {
+            int repair = adminMapper.getWorkOrderCount();
+            int procure = adminMapper.getProcureOrderCount();
+            List<Map<String,Object>> list = new java.util.ArrayList<>();
+            Map<String,Object> a = new HashMap<>(); a.put("name","Repair Ticket"); a.put("count", repair); list.add(a);
+            Map<String,Object> b = new HashMap<>(); b.put("name","Procure Order"); b.put("count", procure); list.add(b);
+            return Result.success("ok", list);
+        } catch (Exception e) {
+            return Result.fail("500", e.getMessage(), null);
+        }
+    }
+
     // User Management - list
     @GetMapping("/req/admin/users")
     public Result listUsers() {
@@ -207,5 +232,39 @@ public class AdminController {
     @GetMapping("/req/admin/changeMaintenanceModeStatus")
     public Result changeMaintenanceModeStatus() {
         return Result.fail("501","Not implemented",null);
+    }
+
+    // Aggregated dashboard endpoint (single call for frontend)
+    @GetMapping("/req/admin/dashboard")
+    public Result dashboard() {
+        try {
+            Map<String, Object> data = new HashMap<>();
+
+            // overall
+            int employeeCount = adminMapper.getEmployeeCount();
+            int departmentCount = adminMapper.getDepartmentCount();
+            int ticketCount = adminMapper.getWorkOrderCount() + adminMapper.getProcureOrderCount();
+            Map<String, Object> overall = new HashMap<>();
+            overall.put("employeeCount", employeeCount);
+            overall.put("departmentCount", departmentCount);
+            overall.put("ticketCount", ticketCount);
+            data.put("overall", overall);
+
+            // bar 1 — employees per department (from tb_account)
+            data.put("departments", adminMapper.countEmployeesByDepartment());
+
+            // pie — users per role
+            data.put("usersByRole", adminMapper.countUsersByRole());
+
+            // bar 2 — ticket categories
+            java.util.List<Map<String,Object>> tc = new java.util.ArrayList<>();
+            Map<String,Object> a = new HashMap<>(); a.put("name","Repair Ticket"); a.put("count", adminMapper.getWorkOrderCount()); tc.add(a);
+            Map<String,Object> b = new HashMap<>(); b.put("name","Procure Order"); b.put("count", adminMapper.getProcureOrderCount()); tc.add(b);
+            data.put("ticketCategories", tc);
+
+            return Result.success("ok", data);
+        } catch (Exception e) {
+            return Result.fail("500", e.getMessage(), null);
+        }
     }
 }

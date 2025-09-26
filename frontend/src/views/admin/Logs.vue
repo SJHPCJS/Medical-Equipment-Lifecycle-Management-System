@@ -1,10 +1,10 @@
 <template>
   <div class="card" style="padding:16px;">
     <div class="title-lg">Logs & Audit</div>
-    <div class="subtitle" style="margin-top:8px;">Data is loaded from backend APIs.</div>
+    <div class="subtitle" style="margin-top:8px;">Track system-level operations. Frontend-only mock.</div>
 
     <!-- Filters -->
-    <div class="filters" style="margin-top:16px; display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; align-items:end;">
+    <div class="ui-toolbar" style="margin-top:16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
       <div>
         <label>Keyword</label>
         <input class="input" v-model="filters.keyword" placeholder="Search user/target/action" />
@@ -25,29 +25,30 @@
 
     <!-- Table -->
     <div class="table-wrapper" style="margin-top:16px; overflow:auto;">
-      <table class="table" style="table-layout:fixed; width:100%;">
+      <table class="ui-table" style="width:100%; max-width:100%; table-layout:auto;">
         <thead>
           <tr>
             <th>Time</th>
-            <th>User</th>
+            <th>User ID</th>
             <th>Action</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="item in paged" :key="item.id">
-            <td>{{ formatTime(item.timestamp) }}</td>
-            <td>{{ item.user }}</td>
-            <td>{{ item.action }}</td>
+          <tr v-if="loading"><td colspan="3"><TableSkeleton :rows="6" /></td></tr>
+          <tr v-else-if="paged.length===0">
+            <td colspan="3"><EmptyState title="No logs" hint="Try changing date range or keyword." /></td>
           </tr>
-          <tr v-if="paged.length===0">
-            <td colspan="3" style="text-align:center; color:var(--color-muted);">No data</td>
+          <tr v-else v-for="item in paged" :key="item.log_id">
+            <td>{{ formatTime(item.log_time) }}</td>
+            <td>{{ item.log_user_id }}</td>
+            <td>{{ item.log_action }}</td>
           </tr>
         </tbody>
       </table>
     </div>
 
     <!-- Pagination -->
-    <div class="pagination" style="display:flex; align-items:center; gap:8px; justify-content:flex-end; margin-top:12px;">
+    <div class="ui-pagination" style="margin-top:12px;">
       <button class="btn" :disabled="page===1" @click="page=1">First</button>
       <button class="btn" :disabled="page===1" @click="page--">Prev</button>
       <span style="color:var(--color-muted);">Page {{ page }} / {{ totalPages }}</span>
@@ -64,8 +65,10 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
-
+import EmptyState from '@/components/admin/EmptyState.vue'
+import TableSkeleton from '@/components/admin/TableSkeleton.vue'
 const state = reactive({ logs: [] })
+const loading = ref(true)
 
 const filters = reactive({ keyword: '', start: '', end: '' })
 const page = ref(1)
@@ -78,9 +81,9 @@ const filtered = computed(() => {
   const startMs = filters.start ? new Date(`${filters.start}T00:00:00`).getTime() : -Infinity
   const endMs = filters.end ? new Date(`${filters.end}T23:59:59.999`).getTime() : Infinity
   return state.logs.filter(l => {
-    const t = new Date(l.timestamp).getTime()
+    const t = new Date(l.log_time).getTime()
     const matchTime = t >= startMs && t <= endMs
-    const join = `${l.user} ${l.action}`.toLowerCase()
+    const join = `${l.log_user_id} ${l.log_action}`.toLowerCase()
     const matchKw = !kw || join.includes(kw)
     return matchTime && matchKw
   })
@@ -99,7 +102,7 @@ function resetFilters() {
 }
 
 function exportCsv() {
-  const rows = [['Time','User','Action'], ...filtered.value.map(r => [r.timestamp, r.user, r.action])]
+  const rows = [['Time','User','Target','Action'], ...filtered.value.map(r => [r.timestamp, r.user, r.target, r.action])]
   const csv = rows.map(r => r.map(x => `"${String(x).replaceAll('"','""')}"`).join(',')).join('\n')
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
   const url = URL.createObjectURL(blob)
@@ -110,29 +113,15 @@ function exportCsv() {
   URL.revokeObjectURL(url)
 }
 
-async function refresh() {
-  try {
-    const resp = await fetch('/req/admin/logs')
-    const json = await resp.json()
-    if (json.code === '000') {
-      state.logs = (json.data || []).map(x => ({
-        id: x.log_id,
-        timestamp: x.log_time,
-        user: x.log_user_id,
-        action: x.log_action,
-      }))
-    }
-  } catch (e) {
-    console.error(e)
-  }
+// 替换为后端数据
+async function refreshLogs() {
+  try { loading.value = true; const r = await fetch('/req/admin/logs'); const j = await r.json(); if (j.code === '000') state.logs = j.data || [] } finally { loading.value = false }
 }
 
-onMounted(refresh)
+onMounted(refreshLogs)
 </script>
+ 
 
 <style scoped>
-.table { width: 100%; border-collapse: collapse; }
-.table th, .table td { padding: 10px 12px; border-bottom: 1px solid #e5e7eb; text-align: left; white-space: normal; word-break: break-word; }
-.table th { background: #f9fafb; font-weight: 700; }
 </style>
 

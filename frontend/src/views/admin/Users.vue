@@ -1,10 +1,9 @@
 <template>
   <div class="card" style="padding:16px;">
-    <div class="title-lg">Users & Access - User Management</div>
-    <div class="subtitle" style="margin-top:8px;">Data is loaded from backend APIs.</div>
+    <div class="subtitle" style="margin-top:0;">Data is loaded from backend APIs.</div>
 
     <!-- Filters -->
-    <div class="filters" style="margin-top:16px; display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:12px;">
+    <div class="ui-toolbar" style="margin-top:16px;">
       <input class="input" v-model="filters.username" placeholder="Search by name" />
       <div>
         <label>User Role</label>
@@ -22,18 +21,22 @@
 
     <!-- Table -->
     <div class="table-wrapper" style="margin-top:16px; overflow:auto;">
-      <table class="table" style="table-layout:fixed; width:100%;">
+      <table class="ui-table" style="width:100%; max-width: 100%; table-layout:auto;">
         <thead>
           <tr>
             <th style="width:140px;">User ID</th>
-            <th style="min-width:220px;">Name</th>
-            <th style="min-width:220px;">User Role</th>
-            <th style="min-width:180px;">Department</th>
+            <th>Name</th>
+            <th>User Role</th>
+            <th>Department</th>
             <th style="width:140px;">Actions</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="u in pagedUsers" :key="u.id">
+          <tr v-if="loading"><td colspan="5"><TableSkeleton :rows="6" /></td></tr>
+          <tr v-else-if="pagedUsers.length === 0">
+            <td colspan="5"><EmptyState title="No users" hint="Try adjusting filters or add a new user." /></td>
+          </tr>
+          <tr v-else v-for="u in pagedUsers" :key="u.id">
             <td>{{ u.id }}</td>
             <td>{{ u.username }}</td>
             <td>{{ roleName(u.roleId) }}</td>
@@ -43,15 +46,12 @@
               <button class="btn btn-red" style="margin-left:8px;" @click="remove(u)">Delete</button>
             </td>
           </tr>
-          <tr v-if="pagedUsers.length === 0">
-            <td colspan="5" style="text-align:center; color:var(--color-muted);">No data</td>
-          </tr>
         </tbody>
       </table>
     </div>
 
     <!-- Pagination -->
-    <div class="pagination" style="display:flex; align-items:center; gap:8px; justify-content:flex-end; margin-top:12px;">
+    <div class="ui-pagination" style="margin-top:12px;">
       <button class="btn" :disabled="page===1" @click="page=1">First</button>
       <button class="btn" :disabled="page===1" @click="page--">Prev</button>
       <span style="color:var(--color-muted);">Page {{ page }} / {{ totalPages }}</span>
@@ -65,10 +65,10 @@
     </div>
 
     <!-- Modal -->
-    <div v-if="modal.open" class="modal-backdrop">
-      <div class="modal card">
+    <div v-if="modal.open" class="ui-modal-backdrop">
+      <div class="ui-modal card">
         <div class="title-lg">{{ modal.mode === 'create' ? 'Add User' : 'Edit User' }}</div>
-        <div class="form-grid">
+        <div class="ui-form-grid">
           <div v-if="modal.mode==='edit'">
             <label>User ID</label>
             <input class="input" :value="modal.form.id" disabled />
@@ -109,6 +109,8 @@
 
 <script setup>
 import { reactive, ref, computed, watch, onMounted } from 'vue'
+import EmptyState from '@/components/admin/EmptyState.vue'
+import TableSkeleton from '@/components/admin/TableSkeleton.vue'
 import MultiSelect from '@/components/MultiSelect.vue'
 function showDialog(message) {
   let overlay = document.createElement('div')
@@ -162,6 +164,7 @@ const roles = [
 ]
 
 const departments = ref([])
+const loading = ref(true)
 
 const state = reactive({ users: [] })
 
@@ -253,6 +256,7 @@ function denormalizeRole(uiRole) {
 }
 
 async function refresh() {
+  loading.value = true
   const resp = await fetch('/req/admin/users')
   const json = await resp.json()
   if (json.code === '000') {
@@ -263,6 +267,7 @@ async function refresh() {
       departmentId: u.departmentId,
     }))
   }
+  loading.value = false
 }
 
 async function save() {
@@ -296,9 +301,7 @@ async function loadDepartments() {
   if (json.code === '000') departments.value = json.data || []
 }
 
-onMounted(async () => {
-  await Promise.all([loadDepartments(), refresh()])
-})
+onMounted(async () => { await Promise.all([loadDepartments(), refresh()]) })
 </script>
 
 <style scoped>
@@ -335,4 +338,5 @@ onMounted(async () => {
   gap: 12px;
 }
 </style>
+
 

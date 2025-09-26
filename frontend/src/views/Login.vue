@@ -4,8 +4,6 @@
       <div class="brand">Medical Equipment Lifecycle Management System</div>
       <div class="login-card card">
         <div class="title-lg">Sign in</div>
-        <div class="subtitle">Demo accounts (password for all: 123456):
-          admin | equipment | department | procurement</div>
         <form class="form" @submit.prevent="onSubmit">
           <label>Name</label>
           <input class="input" v-model="name" placeholder="Enter name" />
@@ -46,10 +44,12 @@ async function onSubmit() {
     if (json && json.code === '000') {
       const id = String(json.data?.account_id || '')
       const role = String(json.data?.role || '')
+      const usernameFromApi = String(json.data?.username || name.value)
       if (!id || !role) throw new Error('Empty id/role')
       localStorage.setItem('demo_logged_in', '1')
       localStorage.setItem('account_id', id)
       localStorage.setItem('role', role)
+      localStorage.setItem('demo_username', usernameFromApi)
       if (role === 'Admin' || role === 'SYS_ADMIN') return router.push('/admin')
       if (role === 'E-Manager' || role === 'EQUIP_MANAGER') return router.push('/equipment')
       if (role === 'D-User' || role === 'DEPT_USER') return router.push('/department')

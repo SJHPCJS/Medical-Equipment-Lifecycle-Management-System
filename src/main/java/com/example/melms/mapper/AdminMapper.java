@@ -12,7 +12,7 @@ public interface AdminMapper {
     @Select("SELECT count(*) FROM tb_department")
     int getDepartmentCount();
 
-    @Select("SELECT count(*) FROM tb_work_order")
+    @Select("SELECT count(*) FROM tb_repair_ticket")
     int getWorkOrderCount();
 
     @Select("SELECT count(*) FROM tb_procure_order")
@@ -62,5 +62,19 @@ public interface AdminMapper {
 
     @Select("SELECT COUNT(*) FROM tb_department WHERE department_name = #{department_name} AND department_id <> #{department_id}")
     int countDepartmentByNameExcludingId(@Param("department_name") String department_name, @Param("department_id") String department_id);
+
+    // Aggregations for dashboard
+    @Select("""
+        SELECT a.department_id AS id,
+               COALESCE(d.department_name, 'Others') AS name,
+               COUNT(*) AS count
+        FROM tb_account a
+        LEFT JOIN tb_department d ON a.department_id = d.department_id
+        GROUP BY a.department_id, d.department_name
+    """)
+    List<Map<String, Object>> countEmployeesByDepartment();
+
+    @Select("SELECT role AS role, COUNT(*) AS count FROM tb_account GROUP BY role")
+    List<Map<String, Object>> countUsersByRole();
 }
 

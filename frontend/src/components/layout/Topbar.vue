@@ -4,23 +4,25 @@
       <div class="title">Medical Equipment Lifecycle Management System</div>
     </div>
     <div class="right">
+      <span class="icon" title="Notifications">🔔</span>
+      <span class="icon" title="Help">💬</span>
+      <div class="avatar" :title="username">{{ initials }}</div>
       <div class="user">{{ username || 'Guest' }}</div>
-      <button class="btn btn-primary" @click="handleLogout">Sign Out</button>
     </div>
   </header>
+  
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
 import { computed } from 'vue'
-const router = useRouter()
 const username = computed(() => localStorage.getItem('demo_username') || '')
-
-function handleLogout() {
-  localStorage.removeItem('demo_logged_in')
-  localStorage.removeItem('demo_username')
-  router.push('/login')
-}
+const initials = computed(() => {
+  const n = (username.value || '').trim()
+  if (!n) return 'U'
+  const parts = n.split(' ')
+  if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase()
+  return n.slice(0,1).toUpperCase()
+})
 </script>
 
 <style scoped>
@@ -42,6 +44,8 @@ function handleLogout() {
   color: var(--color-muted);
   font-size: 14px;
 }
+.icon { font-size: 18px; cursor: default; }
+.avatar { width: 28px; height: 28px; border-radius: 50%; background: #e5e7eb; color: #111; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
 </style>
 
 
