@@ -10,10 +10,23 @@ import java.util.Map;
 @Mapper
 public interface EquipmentMapper {
 
-    @Select("SELECT e.*, t.equipment_type_name, d.department_name " +
+    @Select("SELECT e.equipment_id, e.equipment_type_id, e.status, e.user_manual_path, e.warranty_certificate_path, e.supplier_id, " +
+            "e.department_id, e.pic_url, t.equipment_type_name, d.department_name " +
             "FROM tb_equipment e " +
             "LEFT JOIN tb_equipment_type t ON e.equipment_type_id = t.equipment_type_id " +
             "LEFT JOIN tb_department d ON e.department_id = d.department_id")
+    @Results({
+            @Result(property = "equipmentId", column = "equipment_id"),
+            @Result(property = "equipmentTypeId", column = "equipment_type_id"),
+            @Result(property = "status", column = "status"),
+            @Result(property = "userManualPath", column = "user_manual_path"),
+            @Result(property = "warrantyCertificatePath", column = "warranty_certificate_path"),
+            @Result(property = "supplierId", column = "supplier_id"),
+            @Result(property = "departmentId", column = "department_id"),
+            @Result(property = "picUrl", column = "pic_url"),
+            @Result(property = "equipmentTypeName", column = "equipment_type_name"),
+            @Result(property = "departmentName", column = "department_name")
+    })
     List<Equipment> findAll();
 
     @Select("SELECT e.*, t.equipment_type_name, d.department_name " +
@@ -73,4 +86,17 @@ public interface EquipmentMapper {
                 )
         );
     }
+
+    @Select("SELECT COUNT(*) FROM tb_equipment WHERE status = #{status} AND department_id = #{departmentId}")
+    int countDevicesByStatus(String status, String departmentId);
+
+    @Select("<script>" +
+            "SELECT * FROM tb_equipment WHERE department_id = #{departmentId} " +
+            "<if test='status != null'>AND status = #{status} </if>" +
+            "<if test='keyword != null'>AND (equipment_id LIKE CONCAT('%', #{keyword}, '%') " +
+            "OR equipment_type_id LIKE CONCAT('%', #{keyword}, '%') " +
+            "OR supplier_id LIKE CONCAT('%', #{keyword}, '%')) </if>" +
+            "</script>")
+    List<Equipment> getEquipments(@Param("departmentId") String departmentId, @Param("status") String status,
+                            @Param("keyword") String keyword);
 }

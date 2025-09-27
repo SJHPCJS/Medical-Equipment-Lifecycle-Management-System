@@ -62,7 +62,6 @@ public class EquipmentController {
         list.forEach(e -> {
             String code = Optional.ofNullable(e.getStatus()).orElse("");
             if (codeToLabel.containsKey(code)) e.setStatus(codeToLabel.get(code));
-            // else leave as-is
         });
 
         // simple server-side filtering (if params provided)

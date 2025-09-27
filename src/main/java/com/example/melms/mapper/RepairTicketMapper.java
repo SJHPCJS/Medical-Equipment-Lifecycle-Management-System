@@ -49,4 +49,7 @@ public interface RepairTicketMapper {
         }
         return map;
     }
+
+    @Select("SELECT COUNT(*) FROM tb_repair_ticket WHERE status = 'In Repair' AND department_id = #{departmentId}")
+    int countPendingRepairTickets(String departmentId);
 }
