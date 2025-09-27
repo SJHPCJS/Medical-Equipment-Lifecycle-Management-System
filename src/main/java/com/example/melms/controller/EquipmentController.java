@@ -90,9 +90,11 @@ public class EquipmentController {
         return list.stream().filter(d -> {
             boolean match = true;
             if (!kw.isEmpty()) {
-                String hay = String.join(" ", Optional.ofNullable(d.getEquipmentId()).orElse(""),
+                String hay = String.join(" ",
+                        String.valueOf(d.getEquipmentId()),
                         Optional.ofNullable(d.getEquipmentTypeName()).orElse(""),
-                        Optional.ofNullable(d.getSupplierId()).orElse("")).toLowerCase();
+                        Optional.ofNullable(d.getSupplierId()).orElse("")
+                ).toLowerCase();
                 match = match && hay.contains(kw);
             }
             if (types != null && !types.isEmpty()) {
@@ -114,7 +116,7 @@ public class EquipmentController {
 
     // GET /api/devices/{id}
     @GetMapping("/devices/{id}")
-    public Equipment getDevice(@PathVariable String id) {
+    public Equipment getDevice(@PathVariable int id) {
         Equipment e = equipmentService.findById(id);
         if (e == null) return null;
         String code = Optional.ofNullable(e.getStatus()).orElse("");
@@ -140,7 +142,7 @@ public class EquipmentController {
 
     // PUT /api/devices/{id} update
     @PutMapping("/devices/{id}")
-    public Equipment updateDevice(@PathVariable String id, @RequestBody Equipment equipment) {
+    public Equipment updateDevice(@PathVariable int id, @RequestBody Equipment equipment) {
         // ensure id consistency
         equipment.setEquipmentId(id);
         if (equipment.getStatus() != null) {

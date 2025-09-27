@@ -17,9 +17,6 @@ const EquipLayout = () => import('@/views/equipment/EquipLayout.vue')
 const EquipDashboard = () => import('@/views/equipment/EquipDashboard.vue')
 const EquipLedger = () => import('@/views/equipment/EquipLedger.vue')
 const EquipOnboarding = () => import('@/views/equipment/EquipOnboarding.vue')
-const EquipStatusTransfer = () => import('@/views/equipment/EquipStatusTransfer.vue')
-const EquipDemands = () => import('@/views/equipment/EquipDemands.vue')
-const EquipMaintenance = () => import('@/views/equipment/EquipMaintenance.vue')
 const EquipRepairs = () => import('@/views/equipment/EquipRepairs.vue')
 const EquipScrap = () => import('@/views/equipment/EquipScrap.vue')
 
@@ -67,9 +64,6 @@ const router = createRouter({
         { path: 'dashboard', component: EquipDashboard },
         { path: 'ledger', component: EquipLedger },
         { path: 'onboarding', component: EquipOnboarding },
-        { path: 'status-transfer', component: EquipStatusTransfer },
-        { path: 'demands', component: EquipDemands },
-        { path: 'maintenance', component: EquipMaintenance },
         { path: 'repairs', component: EquipRepairs },
         { path: 'scrap', component: EquipScrap },
       ],

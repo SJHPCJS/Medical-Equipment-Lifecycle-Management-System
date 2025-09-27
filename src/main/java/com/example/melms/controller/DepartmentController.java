@@ -3,6 +3,7 @@ package com.example.melms.controller;
 import com.example.melms.pojo.Equipment;
 import com.example.melms.pojo.UsageLog;
 import com.example.melms.service.DepartmentService;
+import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,9 +11,10 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/req")
+@CrossOrigin
 public class DepartmentController {
 
-    @Autowired
+    @Resource
     private DepartmentService departmentService;
 
     @GetMapping("/dept/dashboard/stats")

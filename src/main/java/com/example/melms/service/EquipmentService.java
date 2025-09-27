@@ -40,7 +40,7 @@ public class EquipmentService {
         return equipmentMapper.delete(id);
     }
 
-    public Equipment findById(String id) {
+    public Equipment findById(int id) {
         return equipmentMapper.findById(id);
     }
 

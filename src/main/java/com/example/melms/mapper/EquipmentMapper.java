@@ -41,7 +41,7 @@ public interface EquipmentMapper {
             "LEFT JOIN tb_equipment_type t ON e.equipment_type_id = t.equipment_type_id " +
             "LEFT JOIN tb_department d ON e.department_id = d.department_id " +
             "WHERE e.equipment_id = #{equipmentId}")
-    Equipment findById(String equipmentId);
+    Equipment findById(Integer equipmentId);
 
     @Insert("INSERT INTO tb_equipment(equipment_id, equipment_type_id, status, user_manual_path, warranty_certificate_path, supplier_id, department_id, pic_url) " +
             "VALUES(#{equipmentId}, #{equipmentTypeId}, #{status}, #{userManualPath}, #{warrantyCertificatePath}, #{supplierId}, #{departmentId}, #{picUrl})")
@@ -108,8 +108,6 @@ public interface EquipmentMapper {
     @Update("UPDATE tb_procure_order SET status = 'finished' WHERE procure_id = #{procureId}")
     void markOrderFinished(@Param("procureId") Integer procureId);
 
-    @Select("SELECT * FROM tb_equipment WHERE equipment_id = #{id}")
-    Equipment findById(Integer id);
 
     @Update("UPDATE tb_equipment SET department_id = #{departmentId}, status = #{status} WHERE equipment_id = #{id}")
     void updateDepartmentAndStatus(@Param("id") Integer id,
