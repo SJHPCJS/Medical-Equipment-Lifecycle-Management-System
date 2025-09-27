@@ -1,6 +1,7 @@
 package com.example.melms.controller;
 
 import com.example.melms.mapper.ProcurementMapper;
+import com.example.melms.pojo.ProcureOrder;
 import com.example.melms.pojo.Result;
 import jakarta.annotation.Resource;
 import org.springframework.web.bind.annotation.*;

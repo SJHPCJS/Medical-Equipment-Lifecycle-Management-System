@@ -99,4 +99,26 @@ public interface EquipmentMapper {
             "</script>")
     List<Equipment> getEquipments(@Param("departmentId") String departmentId, @Param("status") String status,
                             @Param("keyword") String keyword);
+
+
+    @Insert("INSERT INTO tb_equipment (equipment_type_id, status, supplier_id) " +
+            "VALUES (#{equipmentTypeId}, #{status}, #{supplierId})")
+    void insertEquipment(Equipment equipment);
+
+    @Update("UPDATE tb_procure_order SET status = 'finished' WHERE procure_id = #{procureId}")
+    void markOrderFinished(@Param("procureId") Integer procureId);
+
+    @Select("SELECT * FROM tb_equipment WHERE equipment_id = #{id}")
+    Equipment findById(Integer id);
+
+    @Update("UPDATE tb_equipment SET department_id = #{departmentId}, status = #{status} WHERE equipment_id = #{id}")
+    void updateDepartmentAndStatus(@Param("id") Integer id,
+                                  @Param("departmentId") Integer departmentId,
+                                  @Param("status") String status);
+
+    @Update("UPDATE tb_equipment SET user_manual_path = #{path} WHERE equipment_id = #{id}")
+    void updateManualPath(@Param("id") Integer id, @Param("path") String path);
+
+    @Update("UPDATE tb_equipment SET warranty_certificate_path = #{path} WHERE equipment_id = #{id}")
+    void updateWarrantyPath(@Param("id") Integer id, @Param("path") String path);
 }

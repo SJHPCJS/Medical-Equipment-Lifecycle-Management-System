@@ -1,7 +1,7 @@
 <template>
   <div class="card" style="padding:16px;">
     <div class="title-lg">Onboarding & Profiling</div>
-    <div class="subtitle" style="margin-top:8px;">Receiving pending purchase orders for onboarding.</div>
+    <div class="subtitle" style="margin-top:8px;">Receiving arrived purchase orders for onboarding.</div>
 
     <div class="cards" style="margin-top:16px; display:grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap:12px;">
       <div v-for="o in orders" :key="o.id" class="card" style="padding:0; overflow:hidden;">
@@ -12,15 +12,14 @@
         <div style="padding:12px; display:grid; gap:6px;">
           <div class="title-md">{{ o.type }}</div>
           <div class="subtitle">Order: {{ o.id }}</div>
-          <div class="muted">Quantity: {{ o.quantity }}</div>
-          <div class="muted">Requester: {{ o.requester }}</div>
+          <div class="muted">Quantity: {{ o.count }}</div>
+          <div class="muted">Supplier: {{ o.supplierId }}</div>
           <div style="display:flex; gap:8px; margin-top:8px;">
-            <button class="btn btn-green" @click="accept(o)">Accept</button>
-            <button class="btn btn-red" @click="reject(o)">Reject</button>
+            <button class="btn btn-green" @click="onboard(o)">入库</button>
           </div>
         </div>
       </div>
-      <div v-if="orders.length===0" class="subtitle" style="padding:16px;">No pending orders</div>
+      <div v-if="orders.length===0" class="subtitle" style="padding:16px;">No arrived orders</div>
     </div>
   </div>
 </template>
@@ -35,34 +34,25 @@ const orders = state.orders
 
 async function loadOrders() {
   try {
-    const res = await axios.get('/req/purchase-orders/pending')
+    const res = await axios.get('/req//arrived-orders')
     state.orders = res.data
   } catch (err) {
     console.error('Failed to load purchase orders', err)
   }
 }
 
-async function accept(o) {
+async function onboard(o) {
   try {
-    await axios.post(`/req/purchase-orders/${o.id}/accept`)
+    await axios.post(`/req/onboard`, { procureId: o.procure_id })
+    alert(`Order ${o.procure_id} The goods have been successfully warehoused.`)
     await loadOrders()
   } catch (err) {
-    console.error('Accept failed', err)
+    console.error('Onboarding failed', err)
+    alert('Inventory entry failed.')
   }
 }
 
-async function reject(o) {
-  try {
-    await axios.post(`/req/purchase-orders/${o.id}/reject`)
-    await loadOrders()
-  } catch (err) {
-    console.error('Reject failed', err)
-  }
-}
-
-onMounted(() => {
-  loadOrders()
-})
+onMounted(loadOrders)
 </script>
 
 <style scoped>

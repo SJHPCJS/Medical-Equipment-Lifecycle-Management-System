@@ -2,7 +2,7 @@ package com.example.melms.pojo;
 import lombok.Data;
 @Data
 public class Equipment {
-    private String equipmentId;              // 设备ID (主键)
+    private String equipmentId;
     private String equipmentTypeId;          // 设备类型ID
     private String status;                   // 状态 (assigning, using, repairing, scrapping)
     private String userManualPath;           // 用户手册路径
@@ -11,7 +11,6 @@ public class Equipment {
     private String departmentId;             // 部门ID
     private String picUrl;                   // 图片URL
 
-    // 关联展示字段（前端直接用）
     private String equipmentTypeName;        // 设备类型名称
     private String departmentName;           // 部门名称
 }

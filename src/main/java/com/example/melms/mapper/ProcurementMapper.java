@@ -1,5 +1,6 @@
 package com.example.melms.mapper;
 
+import com.example.melms.pojo.ProcureOrder;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
@@ -100,4 +101,7 @@ public interface ProcurementMapper {
     void assignOrder(@Param("procure_id") int procureId,
                      @Param("supplier_id") String supplierId,
                      @Param("count") int count);
+
+    @Select("SELECT * FROM tb_procure_order WHERE status = 'arrived'")
+    List<ProcureOrder> getArrivedOrders();
 }

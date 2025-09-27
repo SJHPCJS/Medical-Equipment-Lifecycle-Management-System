@@ -5,9 +5,19 @@ import com.example.melms.pojo.Equipment;
 import com.example.melms.pojo.ProcureOrder;
 import com.example.melms.service.DepartmentService;
 import com.example.melms.service.EquipmentService;
+import com.example.melms.service.ProcurementService;
 import jakarta.annotation.Resource;
+import lombok.Data;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -21,6 +31,9 @@ public class EquipmentController {
 
     @Resource
     private DepartmentService departmentService;
+
+    @Resource
+    private ProcurementService procurementService;
 
     // mapping between DB enum code and frontend label
     private static final Map<String, String> codeToLabel = new LinkedHashMap<>();
@@ -140,14 +153,12 @@ public class EquipmentController {
         return saved;
     }
 
-    // DELETE /api/devices/{id}
     @DeleteMapping("/devices/{id}")
     public Map<String,String> deleteDevice(@PathVariable String id) {
         equipmentService.deleteById(id);
         return Collections.singletonMap("result", "ok");
     }
 
-    // GET /api/departments
     @GetMapping("/departments")
     public List<?> getDepartments() {
         return departmentService.listAll();
@@ -173,5 +184,81 @@ public class EquipmentController {
     @GetMapping("/dashboard/overview")
     public DashboardVO getOverview() {
         return equipmentService.getDashboardOverview();
+    }
+    @GetMapping("/arrived-orders")
+    public List<ProcureOrder> getArrivedOrders() {
+        return procurementService.getArrivedOrders();
+    }
+    @PostMapping("/onboard/{procureId}")
+    public String onboard(@PathVariable Integer procureId) {
+        List<ProcureOrder> orders = procurementService.getArrivedOrders();
+        for (ProcureOrder order : orders) {
+            if (order.getProcureId().equals(procureId)) {
+                equipmentService.onboardEquipment(order);
+                return "The warehousing has been completed";
+            }
+        }
+        return "The order was not found or the status is incorrect";
+    }
+
+    @PostMapping("/devices/{id}/assign")
+    public String assignDepartment(@PathVariable("id") Integer equipmentId,
+                                   @RequestBody AssignRequest req) {
+        equipmentService.assignDepartment(equipmentId, req.getDepartmentId());
+        return "success";
+    }
+
+    @Data
+    public static class AssignRequest {
+        private Integer departmentId;
+    }
+
+    @Value("${upload.base-dir}")
+    private String baseDir;
+
+    @PostMapping("/devices/{equipmentId}/upload")
+    public ResponseEntity<Map<String, String>> uploadFile(
+            @PathVariable Integer equipmentId,
+            @RequestParam("kind") String kind,
+            @RequestParam("file") MultipartFile file) {
+
+        if (file.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "File is empty"));
+        }
+
+        try {
+            String dir;
+            if ("Manual".equalsIgnoreCase(kind)) {
+                dir = "manuals";
+            } else if ("Warranty".equalsIgnoreCase(kind)) {
+                dir = "warranties";
+            } else {
+                return ResponseEntity.badRequest().body(Map.of("error", "Unknown kind"));
+            }
+
+            // 确保目录存在
+            Path uploadPath = Paths.get(baseDir, dir);
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
+            }
+
+            // 保存文件，防止覆盖
+            String originalFilename = file.getOriginalFilename();
+            String filename = System.currentTimeMillis() + "_" + originalFilename;
+            Path filePath = uploadPath.resolve(filename);
+            file.transferTo(filePath.toFile());
+
+            // 构造前端访问 URL
+            String fileUrl = "/" + dir + "/" + filename;
+
+            equipmentService.saveFile(equipmentId, kind, fileUrl);
+
+            return ResponseEntity.ok(Map.of("url", fileUrl));
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Upload failed"));
+        }
     }
 }
